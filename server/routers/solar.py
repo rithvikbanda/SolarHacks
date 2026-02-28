@@ -4,15 +4,15 @@ import requests
 import sys
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import APIRouter
 
-app = FastAPI()
+router = APIRouter()
 load_dotenv()
 EIA_API_KEY = os.getenv("EIA_API_KEY")
 if not EIA_API_KEY:
     raise ValueError("EIA_API_KEY is not set")
 
-@app.get("/EIA_price_and_usage")
+@router.get("/EIA_price_and_usage")
 def get_price_and_usage(state_abbrev: str):
     """
     Returns a tuple (price_per_kwh, avg_kwh_per_household) for the given state.
