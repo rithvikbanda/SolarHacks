@@ -33,6 +33,8 @@ Thumbs.db
 .parcel-cache/
 .turbo/
 *.tsbuildinfo
+__pycache__/
+*.pyc
 
 # Test / coverage
 coverage/
