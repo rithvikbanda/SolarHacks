@@ -58,17 +58,25 @@ const MOCK_ROADMAP = {
 
 export default function App() {
   const [address, setAddress] = useState('')
+  const [coordinates, setCoordinates] = useState(null) // { lat, lng } for future API calls
   const [roadmap, setRoadmap] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [searchError, setSearchError] = useState(null)
   const hasResults = !loading && roadmap
 
-  const handleAddressSelect = (value) => {
-    setAddress(value)
+  const handleAddressChange = ({ lat, lng, formattedAddress }) => {
+    setSearchError(null)
+    setAddress(formattedAddress)
+    setCoordinates({ lat, lng })
     setLoading(true)
     setTimeout(() => {
       setRoadmap(MOCK_ROADMAP)
       setLoading(false)
     }, 600)
+  }
+
+  const handleSearchError = (message) => {
+    setSearchError(message)
   }
 
   return (
@@ -86,8 +94,27 @@ export default function App() {
 
       <main className="mx-auto max-w-4xl px-4 pb-20 pt-6">
         <div className="relative">
-          <AddressSearch onSelect={handleAddressSelect} placeholder="e.g. 123 Main St, City, ST" />
+          <AddressSearch
+            onChange={handleAddressChange}
+            onError={handleSearchError}
+            placeholder="e.g. 123 Main St, City, ST"
+          />
+          {searchError && (
+            <p className="mt-2 text-sm text-amber-400/90" role="alert">
+              {searchError}
+            </p>
+          )}
         </div>
+
+        {address && coordinates && (
+          <div className="mt-4 rounded-xl border border-slate-700/60 bg-slate-800/40 px-4 py-3 text-left">
+            <p className="text-sm font-medium text-slate-300">Location</p>
+            <p className="mt-0.5 text-slate-200">{address}</p>
+            <p className="mt-2 text-xs text-slate-500 font-mono">
+              {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+            </p>
+          </div>
+        )}
 
         {loading && (
           <div className="mt-12 flex flex-col items-center justify-center py-16">
