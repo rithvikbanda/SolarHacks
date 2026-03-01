@@ -40,7 +40,8 @@ def run_simulation(
     system_size_kw: float,
     annual_kwh: float | None = None,
     price_per_kwh: float | None = None,
-    state_rebate: float = 0,
+    flat_rebates: float = 0,
+    state_itc_entries: list[dict] | None = None,
     years: int = 20,
     n: int = DEFAULT_N,
     seed: int | None = None,
@@ -63,7 +64,7 @@ def run_simulation(
 
     for i in range(n):
         gross_with_overrun = gross * (1 + float(overrun_samples[i]))
-        net = calculate_net_cost(gross_with_overrun, state_rebate)
+        net = calculate_net_cost(gross_with_overrun, flat_rebates, state_itc_entries=state_itc_entries)
 
         prod_mults = prod_mult_samples[i].tolist()
 

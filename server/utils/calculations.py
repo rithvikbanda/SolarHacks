@@ -21,11 +21,27 @@ def calculate_gross_cost(
 
 def calculate_net_cost(
     gross_cost: float,
-    state_rebate: float = 0,
+    flat_rebates: float = 0,
     federal_itc: float = FEDERAL_ITC,
+    state_itc_entries: list[dict] | None = None,
 ) -> float:
-    """Gross cost minus federal ITC and state rebates"""
-    return gross_cost * (1 - federal_itc) - state_rebate
+    """Real-life incentive order:
+    1. Subtract flat rebates (state/utility) from gross cost
+    2. Apply federal ITC to reduced cost basis
+    3. Apply state ITCs (pct credits with optional caps) to reduced cost basis
+    """
+    cost_basis = gross_cost - flat_rebates
+    federal_credit = cost_basis * federal_itc
+
+    state_credit = 0.0
+    if state_itc_entries:
+        for entry in state_itc_entries:
+            credit = cost_basis * entry["pct"]
+            if entry.get("cap") is not None:
+                credit = min(credit, entry["cap"])
+            state_credit += credit
+
+    return cost_basis - federal_credit - state_credit
 
 
 def calculate_payback(

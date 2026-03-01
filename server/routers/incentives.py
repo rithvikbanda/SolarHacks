@@ -118,17 +118,39 @@ def get_incentives(
         if not isinstance(raw_list, list):
             raw_list = []
 
-        # Normalize for frontend: { name, amount (display string), type }
         incentives = [_normalize_incentive(i) for i in raw_list if isinstance(i, dict)]
         total_value = sum(
             _numeric_amount(i.get("amount") or i.get("value") or i.get("rebate") or i.get("max_value"))
             for i in raw_list if isinstance(i, dict)
         )
 
+        # Structured breakdown for calculate_net_cost
+        flat_rebates = 0.0
+        state_itc_entries = []
+        for item in raw_list:
+            if not isinstance(item, dict):
+                continue
+            amt = item.get("amount")
+            if not isinstance(amt, dict):
+                continue
+            amt_type = amt.get("type", "")
+            authority = (item.get("authority_type") or "").lower()
+            if amt_type == "dollar_amount" and authority != "federal":
+                flat_rebates += float(amt.get("number") or 0)
+            elif amt_type == "percent" and authority != "federal":
+                entry = {"pct": float(amt.get("number") or 0)}
+                if amt.get("maximum") is not None:
+                    entry["cap"] = float(amt["maximum"])
+                state_itc_entries.append(entry)
+
         return {
             "incentives": incentives,
             "total_value": int(total_value),
             "count": len(incentives),
+            "for_calculations": {
+                "flat_rebates": flat_rebates,
+                "state_itc_entries": state_itc_entries,
+            },
         }
 
     except requests.exceptions.HTTPError as e:

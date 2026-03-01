@@ -31,11 +31,35 @@ def test_calculate_gross_cost():
     assert calculate_gross_cost(5.0, cost_per_watt=2.5, permit_cost=500) == 5 * 1000 * 2.5 + 500
 
 
-def test_calculate_net_cost():
+def test_calculate_net_cost_no_incentives():
     gross = 30_000
-    # net = gross * (1 - 0.30) - 0 = 21_000
+    # cost_basis=30k, federal_credit=9k, net=21k
     assert calculate_net_cost(gross) == pytest.approx(21_000)
-    assert calculate_net_cost(gross, state_rebate=1000) == pytest.approx(20_000)
+
+
+def test_calculate_net_cost_flat_rebates():
+    gross = 30_000
+    # cost_basis=30k-2k=28k, federal_credit=28k*0.30=8.4k, net=28k-8.4k=19.6k
+    assert calculate_net_cost(gross, flat_rebates=2000) == pytest.approx(19_600)
+
+
+def test_calculate_net_cost_state_itc():
+    gross = 30_000
+    # cost_basis=30k, federal=9k, state=30k*0.15=4.5k capped at 1k, net=30k-9k-1k=20k
+    entries = [{"pct": 0.15, "cap": 1000}]
+    assert calculate_net_cost(gross, state_itc_entries=entries) == pytest.approx(20_000)
+
+
+def test_calculate_net_cost_full_stack():
+    gross = 30_000
+    # cost_basis=30k-3k=27k, federal=27k*0.30=8.1k, state=27k*0.10=2.7k capped at 2k
+    # net=27k-8.1k-2k=16.9k
+    entries = [{"pct": 0.10, "cap": 2000}]
+    assert calculate_net_cost(gross, flat_rebates=3000, state_itc_entries=entries) == pytest.approx(16_900)
+
+
+def test_calculate_net_cost_custom_federal():
+    gross = 30_000
     assert calculate_net_cost(gross, federal_itc=0.26) == pytest.approx(30_000 * 0.74)
 
 

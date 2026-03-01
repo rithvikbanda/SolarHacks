@@ -85,11 +85,14 @@ async def generate_report(
 
     price_per_kwh = solar_data["price_per_kwh"] if solar_data else None
     annual_kwh = solar_data["avg_kwh_per_household"] if solar_data else None
-    state_rebate = incentives_data.get("total_value", 0) if incentives_data else 0
+
+    calc_data = (incentives_data or {}).get("for_calculations", {})
+    flat_rebates = calc_data.get("flat_rebates", 0)
+    state_itc_entries = calc_data.get("state_itc_entries") or None
 
     # Deterministic single-point estimates
     gross = calculate_gross_cost(system_size_kw)
-    net = calculate_net_cost(gross, state_rebate)
+    net = calculate_net_cost(gross, flat_rebates, state_itc_entries=state_itc_entries)
     payback = calculate_payback(net, annual_kwh, price_per_kwh)
     savings = calculate_savings_over_time(net, annual_kwh, price_per_kwh, years)
     carbon = calculate_carbon_offset(annual_kwh, years)
@@ -108,7 +111,8 @@ async def generate_report(
         system_size_kw=system_size_kw,
         annual_kwh=annual_kwh,
         price_per_kwh=price_per_kwh,
-        state_rebate=state_rebate,
+        flat_rebates=flat_rebates,
+        state_itc_entries=state_itc_entries,
         years=years,
         n=min(n_simulations, 10000),
     )
