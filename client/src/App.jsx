@@ -82,7 +82,7 @@ export default function App() {
     <div className="min-h-screen page-gradient">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]/80 backdrop-blur-md">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-white tracking-tight">Home Energy Roadmap</span>
             <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Solar · Wind · Geothermal</span>
@@ -90,7 +90,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8">
 
         {/* Hero */}
         <section className="pt-2">
