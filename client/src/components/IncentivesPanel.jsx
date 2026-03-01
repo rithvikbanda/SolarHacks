@@ -7,10 +7,11 @@ const TYPE_META = {
   Utility: { color: '#fbbf24', label: 'Utility'  },
 }
 
-export default function IncentivesPanel({ incentives: data, hasIncome, className = '' }) {
+export default function IncentivesPanel({ incentives: data, hasIncome, ownerStatus, className = '' }) {
   const list  = data?.incentives ?? []
   const total = data?.total_value ?? 0
   const money = (n) => `$${Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+  const isRenter = ownerStatus === 'renter'
 
   return (
     <div className={`rounded-2xl overflow-hidden ${className || ''}`}
@@ -46,6 +47,17 @@ export default function IncentivesPanel({ incentives: data, hasIncome, className
 
       {/* Content */}
       <div className="px-5 pb-5">
+        {isRenter && (
+          <div className="flex items-start gap-3 rounded-xl p-3 mb-4"
+            style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)' }}>
+            <svg className="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p className="text-xs text-amber-200/90 leading-relaxed">
+              Renters typically cannot claim rooftop solar tax credits or rebates. Results may show community solar or other options where applicable.
+            </p>
+          </div>
+        )}
         {!hasIncome ? (
           <div className="flex items-start gap-3 rounded-xl p-4"
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>

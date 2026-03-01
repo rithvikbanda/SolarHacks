@@ -12,6 +12,13 @@ router = APIRouter()
 
 REWIRING_AMERICA_URL = "https://api.rewiringamerica.org/api/v1/calculator"
 
+SOLAR_ITEMS = {
+    "rooftop_solar_installation",
+    "battery_storage_installation",
+    "solar_water_heater",
+    "community_solar_garden",
+}
+
 
 def _format_amount(value) -> str:
     """Turn API amount into display string (e.g. $1,200 or 15% up to $1,000)."""
@@ -72,9 +79,9 @@ def _normalize_incentive(item: dict) -> dict:
 def get_incentives(
     zip: str = Query(..., description="5-digit zip code"),
     income: int | None = Query(None, description="Annual household income in dollars"),
-    household_size: int = Query(default=2, alias="householdSize", description="Number of people in household"),
-    filing_status: str = Query(default="single", alias="filingStatus", description="Tax filing status: single or married"),
-    owners_or_renters: str = Query(default="homeowner", alias="ownersOrRenters", description="homeowner or renter"),
+    household_size: int = Query(default=2, alias="householdSize", description="Number of people in household; affects AMI and state rebate eligibility"),
+    filing_status: str = Query(default="single", alias="filingStatus", description="Tax filing status: single or married; affects income-bracket thresholds"),
+    owners_or_renters: str = Query(default="homeowner", alias="ownersOrRenters", description="homeowner or renter; renters cannot claim rooftop solar credits"),
 ):
     if income is None:
         return {
@@ -123,19 +130,30 @@ def get_incentives(
         if not isinstance(raw_list, list):
             raw_list = []
 
-        SOLAR_ITEMS = {"rooftop_solar_installation", "battery_storage_installation"}
+        # DEBUG — print every incentive so you can check items tags
+        # Remove this block once you've confirmed the data looks right
+        for item in raw_list:
+            print("DEBUG INCENTIVE:", json.dumps({
+                "program": item.get("program"),
+                "authority_type": item.get("authority_type"),
+                "items": item.get("items"),
+                "amount": item.get("amount"),
+            }, indent=2))
 
+        # Filter to solar-related incentives only FIRST before anything else
         solar_list = [
             i for i in raw_list
             if isinstance(i, dict) and set(i.get("items") or []) & SOLAR_ITEMS
         ]
 
+        # Normalize and total using only the filtered solar list
         incentives = [_normalize_incentive(i) for i in solar_list]
         total_value = sum(
             _numeric_amount(i.get("amount") or i.get("value") or i.get("rebate") or i.get("max_value"))
             for i in solar_list
         )
 
+        # Build for_calculations from solar_list — already filtered, no need to re-check items
         flat_rebates = 0.0
         state_itc_entries = []
         for item in solar_list:

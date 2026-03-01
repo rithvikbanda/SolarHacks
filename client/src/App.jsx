@@ -27,6 +27,9 @@ function Skeleton() {
 export default function App() {
   const [location, setLocation] = useState(null)
   const [income, setIncome] = useState('')
+  const [householdSize, setHouseholdSize] = useState(2)
+  const [filingStatus, setFilingStatus] = useState('single')
+  const [ownerStatus, setOwnerStatus] = useState('homeowner')
   const [panelConfig, setPanelConfig] = useState(null)
   const [allConfigs, setAllConfigs] = useState(null)
   const [solarReady, setSolarReady] = useState(false)
@@ -46,6 +49,9 @@ export default function App() {
         state_abbrev: loc.address.state ?? '',
         zip: loc.address.zip ?? '',
         n_simulations: 500,
+        household_size: householdSize,
+        filing_status: filingStatus,
+        owners_or_renters: ownerStatus,
       })
       if (incomeVal) params.set('income', incomeVal)
       if (panelCfg) {
@@ -172,6 +178,50 @@ export default function App() {
                 )}
               </button>
             </div>
+            <div className="w-full max-w-md space-y-3 pt-2 border-t border-[var(--border-subtle)]">
+              <p className="text-xs font-medium text-[var(--text-muted)]">Eligibility details (affect rebates & credits)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Owner status</label>
+                  <select
+                    value={ownerStatus}
+                    onChange={(e) => setOwnerStatus(e.target.value)}
+                    className="input-base w-full text-sm"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="homeowner">Homeowner</option>
+                    <option value="renter">Renter</option>
+                  </select>
+                  <p className="text-[10px] text-slate-500 mt-1">Renters can&apos;t claim rooftop solar credits</p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Tax filing</label>
+                  <select
+                    value={filingStatus}
+                    onChange={(e) => setFilingStatus(e.target.value)}
+                    className="input-base w-full text-sm"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="single">Single</option>
+                    <option value="married">Married</option>
+                  </select>
+                  <p className="text-[10px] text-slate-500 mt-1">Affects income-bracket thresholds</p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Household size</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={householdSize}
+                    onChange={(e) => setHouseholdSize(Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1)))}
+                    className="input-base w-full text-sm"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">Affects AMI & state rebate eligibility</p>
+                </div>
+              </div>
+            </div>
           </section>
         )}
 
@@ -194,7 +244,7 @@ export default function App() {
               <WindCard wind={report.wind} className="stagger-2" />
               <GeothermalCard geothermal={report.geothermal} className="stagger-3" />
             </div>
-            <IncentivesPanel incentives={report.incentives} hasIncome={!!income} className="stagger-4" />
+            <IncentivesPanel incentives={report.incentives} hasIncome={!!income} ownerStatus={ownerStatus} className="stagger-4" />
             <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-5" />
             {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-6" />}
           </div>

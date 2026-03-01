@@ -49,7 +49,7 @@ function StatBox({ label, value, sub }) {
 
 export default function SolarCard({ solar, deterministic, className = '' }) {
   const price   = solar?.price_per_kwh
-  const usage   = solar?.avg_kwh_per_household
+  const usage   = solar?.annual_usage_kwh ?? solar?.avg_kwh_per_household
   const gross   = deterministic?.gross_cost
   const net     = deterministic?.net_cost
   const payback = deterministic?.payback_years

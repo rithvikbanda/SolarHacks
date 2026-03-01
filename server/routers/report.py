@@ -14,6 +14,7 @@ from utils.calculations import (
     calculate_carbon_offset,
 )
 from utils.charts import plot_savings_fan_chart
+from utils.constants import DEFAULT_ANNUAL_USAGE_KWH, DEFAULT_UTILITY_RATE
 
 router = APIRouter()
 
@@ -96,6 +97,15 @@ async def generate_report(
 
     price_per_kwh = solar_data["price_per_kwh"] if solar_data else None
     annual_usage_kwh = solar_data["annual_usage_kwh"] if solar_data else None
+
+    # Ensure report always has a solar object with at least default usage for the UI
+    if solar_data is None:
+        solar_data = {
+            "price_per_kwh": DEFAULT_UTILITY_RATE,
+            "annual_usage_kwh": DEFAULT_ANNUAL_USAGE_KWH,
+        }
+    elif solar_data.get("annual_usage_kwh") is None:
+        solar_data = {**solar_data, "annual_usage_kwh": DEFAULT_ANNUAL_USAGE_KWH}
 
     calc_data = (incentives_data or {}).get("for_calculations", {})
     flat_rebates = calc_data.get("flat_rebates", 0)
