@@ -256,10 +256,7 @@ export default function App() {
               <WindCard wind={report.wind} className="stagger-6" />
               <GeothermalCard geothermal={report.geothermal} className="stagger-7" />
             </div>
-            <IncentivesPanel incentives={report.incentives} hasIncome={!!income} ownerStatus={ownerStatus} className="stagger-4" />
-            <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-5" />
-            {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-6" />}
-            <CarbonCard report={report} className="stagger-7" />
+            <CarbonCard report={report} className="stagger-8" />
           </div>
         )}
 
