@@ -8,6 +8,7 @@ from utils.constants import (
     DEFAULT_ANNUAL_KWH,
     CO2_LBS_PER_KWH,
 )
+from utils.zip_region import get_co2_emissions_lbs_mwh
 
 
 def calculate_gross_cost(
@@ -74,13 +75,21 @@ def calculate_carbon_offset(
     years: int = 20,
     panel_degradation: float = PANEL_DEGRADATION,
     production_multipliers: list[float] | None = None,
+    zip_code: str | None = None,
 ) -> float:
-    """kWh production converted to CO2 tons offset"""
+    """kWh production converted to CO2 tons offset.
+    Uses zip-specific grid emissions factor when zip_code is provided,
+    otherwise falls back to the national average (CO2_LBS_PER_KWH).
+    """
     kwh = annual_kwh if annual_kwh is not None else DEFAULT_ANNUAL_KWH
+
+    lbs_per_mwh = get_co2_emissions_lbs_mwh(zip_code) if zip_code else None
+    co2_lbs_per_kwh = lbs_per_mwh / 1000 if lbs_per_mwh is not None else CO2_LBS_PER_KWH
+
     total_kwh = 0.0
     for year in range(1, years + 1):
         production = kwh * (1 - panel_degradation) ** year
         if production_multipliers is not None:
             production *= production_multipliers[year - 1]
         total_kwh += production
-    return round(total_kwh * CO2_LBS_PER_KWH / 2000, 2)
+    return round(total_kwh * co2_lbs_per_kwh / 2000, 2)
