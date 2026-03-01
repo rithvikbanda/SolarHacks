@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const CALLBACK_NAME = '___addressToLatLongInit___';
 
@@ -57,7 +57,7 @@ function loadScript(key) {
  *
  * @param {Object} props
  * @param {string} [props.apiKey] - Google API key (or set VITE_GOOGLE_MAPS_API_KEY)
- * @param {function} [props.onChange] - Called when a place is selected. Receives `{ lat, lng, formattedAddress }`.
+ * @param {function} [props.onChange] - Called when a place is selected. Receives `{ lat, lng, address }` with address as deconstructed fields: streetNumber, route, street, unit, city, state, zip
  * @param {function} [props.onError] - Called when selection fails. Receives error message string.
  */
 export default function AddressSearch({ apiKey, onChange, onError, placeholder = 'Enter an address...' }) {
@@ -93,18 +93,48 @@ export default function AddressSearch({ apiKey, onChange, onError, placeholder =
       try {
         const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
         if (!mounted || !containerRef.current) return;
-        const el = new PlaceAutocompleteElement({ placeholder });
+        const el = new PlaceAutocompleteElement({
+          placeholder,
+          includedPrimaryTypes: ['street_address', 'premise', 'subpremise', 'establishment'],
+          includedRegionCodes: ['us'],
+        });
         if (!mounted || !containerRef.current) return;
         containerRef.current.appendChild(el);
         widgetRef.current = el;
         el.addEventListener('gmp-select', async ({ placePrediction }) => {
           const place = placePrediction.toPlace();
-          await place.fetchFields({ fields: ['location', 'formattedAddress', 'displayName'] });
+          await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'addressComponents'] });
           if (!place.location) {
             onErrorRef.current?.('No coordinates for that place.');
             return;
           }
-          const data = { lat: place.location.lat(), lng: place.location.lng(), formattedAddress: place.formattedAddress || place.displayName || '' };
+          const components = place.addressComponents || [];
+          const get = (typeKeys, preferShort = false) => {
+            const c = components.find((comp) => (comp.types || []).some((t) => Array.isArray(typeKeys) ? typeKeys.includes(t) : typeKeys === t));
+            if (!c) return '';
+            return preferShort ? (c.shortText || c.longText || '') : (c.longText || c.shortText || '');
+          };
+          const streetNumber = get(['street_number']);
+          const route = get(['route']);
+          const unit = get(['subpremise']);
+          const city = get(['locality']);
+          const state = get('administrative_area_level_1', true);
+          const zip = get(['postal_code']);
+          const street = [streetNumber, route].filter(Boolean).join(' ');
+          const address = {
+            streetNumber,
+            route,
+            street: street || undefined,
+            unit: unit || undefined,
+            city: city || undefined,
+            state: state || undefined,
+            zip: zip || undefined,
+          };
+          const data = {
+            lat: place.location.lat(),
+            lng: place.location.lng(),
+            address,
+          };
           onChangeRef.current?.(data);
         });
       } catch (err) {
