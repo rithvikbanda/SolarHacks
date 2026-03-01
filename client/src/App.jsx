@@ -227,6 +227,7 @@ export default function App() {
               </p>
             )}
             <SolarCard solar={report.solar} deterministic={report.deterministic} className="stagger-1" />
+            <CarbonCard report={report} className="stagger-2" />
             <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-3" />
             {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-4" />}
             <FinancingCard
@@ -236,105 +237,103 @@ export default function App() {
                 : null}
               className="stagger-5"
             />
-            <div className="grid sm:grid-cols-2 gap-4">
-              <WindCard wind={report.wind} className="stagger-6" />
-              <GeothermalCard geothermal={report.geothermal} className="stagger-7" />
-            </div>
-            <CarbonCard report={report} className="stagger-8" />
-          </div>
-        )}
 
-        {/* Incentives at bottom: inputs + button + display */}
-        {location && (
-          <section className="rounded-2xl border border-[var(--border-muted)] bg-[var(--bg-card)] shadow-xl shadow-black/10 overflow-hidden">
-            <div className="p-5 sm:p-6 space-y-4">
-              <div>
-                <h2 className="text-base font-bold text-slate-100">Incentives</h2>
-                <p className="text-sm text-[var(--text-secondary)] mt-1">
-                  Enter your household income and eligibility to see rebates and tax credits for this location.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Incentives */}
+            <section className="rounded-2xl border border-[var(--border-muted)] bg-[var(--bg-card)] shadow-xl shadow-black/10 overflow-hidden stagger-6">
+              <div className="p-5 sm:p-6 space-y-4">
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Household income</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-sm font-semibold">$</span>
+                  <h2 className="text-base font-bold text-slate-100">Incentives</h2>
+                  <p className="text-sm text-[var(--text-secondary)] mt-1">
+                    Enter your household income and eligibility to see rebates and tax credits for this location.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Household income</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-sm font-semibold">$</span>
+                      <input
+                        type="number"
+                        value={income}
+                        onChange={(e) => setIncome(e.target.value)}
+                        placeholder="Annual income"
+                        className="input-base w-full pl-7 text-sm"
+                        style={{ colorScheme: 'dark' }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Owner status</label>
+                    <select
+                      value={ownerStatus}
+                      onChange={(e) => setOwnerStatus(e.target.value)}
+                      className="input-base w-full text-sm"
+                      style={{ colorScheme: 'dark' }}
+                    >
+                      <option value="homeowner">Homeowner</option>
+                      <option value="renter">Renter</option>
+                    </select>
+                    <p className="text-[10px] text-slate-500 mt-1">Renters can&apos;t claim rooftop solar credits</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Tax filing</label>
+                    <select
+                      value={filingStatus}
+                      onChange={(e) => setFilingStatus(e.target.value)}
+                      className="input-base w-full text-sm"
+                      style={{ colorScheme: 'dark' }}
+                    >
+                      <option value="single">Single</option>
+                      <option value="married">Married</option>
+                    </select>
+                    <p className="text-[10px] text-slate-500 mt-1">Affects income-bracket thresholds</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Household size</label>
                     <input
                       type="number"
-                      value={income}
-                      onChange={(e) => setIncome(e.target.value)}
-                      placeholder="Annual income"
-                      className="input-base w-full pl-7 text-sm"
+                      min={1}
+                      max={20}
+                      value={householdSize}
+                      onChange={(e) => setHouseholdSize(Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1)))}
+                      className="input-base w-full text-sm"
                       style={{ colorScheme: 'dark' }}
                     />
+                    <p className="text-[10px] text-slate-500 mt-1">Affects AMI & state rebate eligibility</p>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Owner status</label>
-                  <select
-                    value={ownerStatus}
-                    onChange={(e) => setOwnerStatus(e.target.value)}
-                    className="input-base w-full text-sm"
-                    style={{ colorScheme: 'dark' }}
-                  >
-                    <option value="homeowner">Homeowner</option>
-                    <option value="renter">Renter</option>
-                  </select>
-                  <p className="text-[10px] text-slate-500 mt-1">Renters can&apos;t claim rooftop solar credits</p>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Tax filing</label>
-                  <select
-                    value={filingStatus}
-                    onChange={(e) => setFilingStatus(e.target.value)}
-                    className="input-base w-full text-sm"
-                    style={{ colorScheme: 'dark' }}
-                  >
-                    <option value="single">Single</option>
-                    <option value="married">Married</option>
-                  </select>
-                  <p className="text-[10px] text-slate-500 mt-1">Affects income-bracket thresholds</p>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Household size</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={householdSize}
-                    onChange={(e) => setHouseholdSize(Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1)))}
-                    className="input-base w-full text-sm"
-                    style={{ colorScheme: 'dark' }}
-                  />
-                  <p className="text-[10px] text-slate-500 mt-1">Affects AMI & state rebate eligibility</p>
-                </div>
+                <button
+                  onClick={fetchIncentives}
+                  disabled={incentivesLoading || !income}
+                  className="btn-primary"
+                >
+                  {incentivesLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Calculating…
+                    </span>
+                  ) : !income ? (
+                    'Enter income to calculate incentives'
+                  ) : (
+                    'Calculate incentives →'
+                  )}
+                </button>
               </div>
-              <button
-                onClick={fetchIncentives}
-                disabled={incentivesLoading || !income}
-                className="btn-primary"
-              >
-                {incentivesLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                    </svg>
-                    Calculating…
-                  </span>
-                ) : !income ? (
-                  'Enter income to calculate incentives'
-                ) : (
-                  'Calculate incentives →'
-                )}
-              </button>
+              {incentives !== null && (
+                <div className="border-t border-[var(--border-subtle)]">
+                  <IncentivesPanel incentives={incentives} hasIncome={!!income} ownerStatus={ownerStatus} />
+                </div>
+              )}
+            </section>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <WindCard wind={report.wind} className="stagger-7" />
+              <GeothermalCard geothermal={report.geothermal} className="stagger-8" />
             </div>
-            {incentives !== null && (
-              <div className="border-t border-[var(--border-subtle)]">
-                <IncentivesPanel incentives={incentives} hasIncome={!!income} ownerStatus={ownerStatus} />
-              </div>
-            )}
-          </section>
+          </div>
         )}
 
       </main>
