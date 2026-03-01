@@ -14,8 +14,9 @@ import { loadSolarOverlay } from '../utils/solarOverlay';
  * @param {string} [props.apiKey]
  * @param {function} [props.onPanelConfigChange] - Receives { panelCount, yearlyKwh, panelCapacityWatts } or null.
  * @param {function} [props.onSolarReady] - Called with true when solar data finishes loading (success or failure), false when it starts.
+ * @param {function} [props.onAllConfigsReady] - Receives { configs: [...], panelCapacityWatts } or null.
  */
-export default function MapPreview({ lat, lng, address, zoom = 18, className = '', solarOverlay = true, apiKey: apiKeyProp, onPanelConfigChange, onSolarReady }) {
+export default function MapPreview({ lat, lng, address, zoom = 18, className = '', solarOverlay = true, apiKey: apiKeyProp, onPanelConfigChange, onSolarReady, onAllConfigsReady }) {
   const apiKey = apiKeyProp || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -27,6 +28,8 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
   onChangeRef.current = onPanelConfigChange;
   const onSolarReadyRef = useRef(onSolarReady);
   onSolarReadyRef.current = onSolarReady;
+  const onAllConfigsRef = useRef(onAllConfigsReady);
+  onAllConfigsRef.current = onAllConfigsReady;
 
   const [mapError, setMapError] = useState(null);
   const [solarStatus, setSolarStatus] = useState(null);
@@ -144,6 +147,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                     const showCount = configs.length ? (configs[0].panelsCount ?? configs[0].panels_count ?? polygons.length) : polygons.length;
                     polygons.forEach((p, i) => p.setMap(i < showCount ? mapRef.current : null));
                     emitPanelConfig(0);
+                    onAllConfigsRef.current?.({ configs, panelCapacityWatts: panelCapacityWattsRef.current });
                   }
                 } catch (e) {
                   console.warn('Solar panel preview failed:', e?.message || e);
@@ -154,12 +158,14 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                 solarPanelConfigsRef.current = [];
                 panelCapacityWattsRef.current = null;
                 onChangeRef.current?.(null);
+                onAllConfigsRef.current?.(null);
               }
               onSolarReadyRef.current?.(true);
             })
             .catch((err) => {
               setSolarStatus('unavailable');
               console.warn('Solar overlay failed:', err?.message || err);
+              onAllConfigsRef.current?.(null);
               onSolarReadyRef.current?.(true);
             });
         }

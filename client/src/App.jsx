@@ -6,6 +6,7 @@ import WindCard from './components/WindCard'
 import GeothermalCard from './components/GeothermalCard'
 import IncentivesPanel from './components/IncentivesPanel'
 import SavingsGraph from './components/SavingsGraph'
+import PanelComparisonChart from './components/PanelComparisonChart'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -27,6 +28,7 @@ export default function App() {
   const [location, setLocation] = useState(null)
   const [income, setIncome] = useState('')
   const [panelConfig, setPanelConfig] = useState(null)
+  const [allConfigs, setAllConfigs] = useState(null)
   const [solarReady, setSolarReady] = useState(false)
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -65,6 +67,7 @@ export default function App() {
   function handleAddressChange(loc) {
     setLocation(loc)
     setPanelConfig(null)
+    setAllConfigs(null)
     setSolarReady(false)
     setReport(null)
     setError(null)
@@ -121,7 +124,7 @@ export default function App() {
         {/* Map */}
         {location && (
           <section className="overflow-hidden rounded-2xl border border-[var(--border-muted)] shadow-xl shadow-black/10">
-            <MapPreview lat={location.lat} lng={location.lng} address={addressStr} className="w-full" onPanelConfigChange={setPanelConfig} onSolarReady={setSolarReady} />
+            <MapPreview lat={location.lat} lng={location.lng} address={addressStr} className="w-full" onPanelConfigChange={setPanelConfig} onAllConfigsReady={setAllConfigs} onSolarReady={setSolarReady} />
           </section>
         )}
 
@@ -193,6 +196,7 @@ export default function App() {
             </div>
             <IncentivesPanel incentives={report.incentives} hasIncome={!!income} className="stagger-4" />
             <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-5" />
+            {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-6" />}
           </div>
         )}
 
