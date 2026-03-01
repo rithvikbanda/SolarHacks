@@ -214,7 +214,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
       <div
         ref={containerRef}
         className="w-full"
-        style={{ height: '280px', minHeight: '280px' }}
+        style={{ height: '500px', minHeight: '280px' }}
         aria-label="Map preview"
       />
 

@@ -36,10 +36,12 @@ export default function App() {
   const [allConfigs, setAllConfigs] = useState(null)
   const [solarReady, setSolarReady] = useState(false)
   const [report, setReport] = useState(null)
+  const [incentives, setIncentives] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [incentivesLoading, setIncentivesLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  async function fetchReport(loc, incomeVal, panelCfg) {
+  async function fetchReport(loc, panelCfg) {
     if (!loc) return
     setLoading(true)
     setError(null)
@@ -51,11 +53,7 @@ export default function App() {
         state_abbrev: loc.address.state ?? '',
         zip: loc.address.zip ?? '',
         n_simulations: 500,
-        household_size: householdSize,
-        filing_status: filingStatus,
-        owners_or_renters: ownerStatus,
       })
-      if (incomeVal) params.set('income', incomeVal)
       if (panelCfg) {
         params.set('panel_count', panelCfg.panelCount)
         params.set('solar_production_kwh', panelCfg.yearlyKwh)
@@ -72,12 +70,47 @@ export default function App() {
     }
   }
 
+  async function fetchIncentives() {
+    if (!location?.address?.zip) return
+    setIncentivesLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams({
+        lat: location.lat,
+        lon: location.lng,
+        state_abbrev: location.address.state ?? '',
+        zip: location.address.zip ?? '',
+        n_simulations: 500,
+        household_size: householdSize,
+        filing_status: filingStatus,
+        owners_or_renters: ownerStatus,
+      })
+      if (income) params.set('income', income)
+      if (panelConfig) {
+        params.set('panel_count', panelConfig.panelCount)
+        params.set('solar_production_kwh', panelConfig.yearlyKwh)
+        if (panelConfig.panelCapacityWatts)
+          params.set('panel_capacity_watts', panelConfig.panelCapacityWatts)
+      }
+      const res = await fetch(`${API}/api/report?${params}`)
+      if (!res.ok) throw new Error(`Server error ${res.status}`)
+      const data = await res.json()
+      setReport(data)
+      setIncentives(data.incentives ?? null)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setIncentivesLoading(false)
+    }
+  }
+
   function handleAddressChange(loc) {
     setLocation(loc)
     setPanelConfig(null)
     setAllConfigs(null)
     setSolarReady(false)
     setReport(null)
+    setIncentives(null)
     setError(null)
   }
 
@@ -136,53 +169,106 @@ export default function App() {
           </section>
         )}
 
-        {/* Income + Analyze */}
+        {/* Analyze (address + panels only) */}
         {location && (
-          <section className="flex flex-col items-center gap-4 p-5 rounded-2xl border border-[var(--border-muted)] bg-[var(--bg-card)]">
+          <section className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-[var(--border-muted)] bg-[var(--bg-card)]">
             <p className="text-sm font-medium text-[var(--text-secondary)] text-center">
-              Enter your household income to get personalized incentives
+              Calculate solar, wind & geothermal potential for this address
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-              <div className="relative flex-1">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-sm font-semibold">$</span>
-                <input
-                  type="number"
-                  value={income}
-                  onChange={(e) => setIncome(e.target.value)}
-                  placeholder="Annual household income"
-                  className="input-base pl-8"
-                  style={{ colorScheme: 'dark' }}
-                />
-              </div>
-              <button
-                onClick={() => fetchReport(location, income ? parseInt(income, 10) : null, panelConfig)}
-                disabled={loading || !solarReady}
-                className="btn-primary"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                    </svg>
-                    Analyzing…
-                  </span>
-                ) : !solarReady ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                    </svg>
-                    Loading solar data…
-                  </span>
-                ) : (
-                  'Analyze →'
-                )}
-              </button>
+            <button
+              onClick={() => fetchReport(location, panelConfig)}
+              disabled={loading || !solarReady}
+              className="btn-primary"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  Analyzing…
+                </span>
+              ) : !solarReady ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  Loading solar data…
+                </span>
+              ) : (
+                'Analyze'
+              )}
+            </button>
+          </section>
+        )}
+
+        {loading && <Skeleton />}
+        {incentivesLoading && report && (
+          <p className="text-sm text-[var(--text-muted)] flex items-center gap-2">
+            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+            Updating costs with incentives…
+          </p>
+        )}
+
+        {/* Results */}
+        {report && !loading && (
+          <div className="space-y-6 pb-12">
+            {addressStr && (
+              <p className="text-sm text-[var(--text-muted)] flex items-center gap-2">
+                <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {addressStr}
+              </p>
+            )}
+            <SolarCard solar={report.solar} deterministic={report.deterministic} className="stagger-1" />
+            <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-3" />
+            {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-4" />}
+            <FinancingCard
+              netCost={report.deterministic?.net_cost}
+              monthlySavings={report.solar?.price_per_kwh && report.solar_production_kwh
+                ? (report.solar_production_kwh * report.solar.price_per_kwh) / 12
+                : null}
+              className="stagger-5"
+            />
+            <div className="grid sm:grid-cols-2 gap-4">
+              <WindCard wind={report.wind} className="stagger-6" />
+              <GeothermalCard geothermal={report.geothermal} className="stagger-7" />
             </div>
-            <div className="w-full max-w-md space-y-3 pt-2 border-t border-[var(--border-subtle)]">
-              <p className="text-xs font-medium text-[var(--text-muted)]">Eligibility details (affect rebates & credits)</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <CarbonCard report={report} className="stagger-8" />
+          </div>
+        )}
+
+        {/* Incentives at bottom: inputs + button + display */}
+        {location && (
+          <section className="rounded-2xl border border-[var(--border-muted)] bg-[var(--bg-card)] shadow-xl shadow-black/10 overflow-hidden">
+            <div className="p-5 sm:p-6 space-y-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-100">Incentives</h2>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">
+                  Enter your household income and eligibility to see rebates and tax credits for this location.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Household income</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-sm font-semibold">$</span>
+                    <input
+                      type="number"
+                      value={income}
+                      onChange={(e) => setIncome(e.target.value)}
+                      placeholder="Annual income"
+                      className="input-base w-full pl-7 text-sm"
+                      style={{ colorScheme: 'dark' }}
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Owner status</label>
                   <select
@@ -223,41 +309,32 @@ export default function App() {
                   <p className="text-[10px] text-slate-500 mt-1">Affects AMI & state rebate eligibility</p>
                 </div>
               </div>
+              <button
+                onClick={fetchIncentives}
+                disabled={incentivesLoading || !income}
+                className="btn-primary"
+              >
+                {incentivesLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Calculating…
+                  </span>
+                ) : !income ? (
+                  'Enter income to calculate incentives'
+                ) : (
+                  'Calculate incentives →'
+                )}
+              </button>
             </div>
-          </section>
-        )}
-
-        {loading && <Skeleton />}
-
-        {/* Results */}
-        {report && !loading && (
-          <div className="space-y-6 pb-12">
-            {addressStr && (
-              <p className="text-sm text-[var(--text-muted)] flex items-center gap-2">
-                <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                {addressStr}
-              </p>
+            {incentives !== null && (
+              <div className="border-t border-[var(--border-subtle)]">
+                <IncentivesPanel incentives={incentives} hasIncome={!!income} ownerStatus={ownerStatus} />
+              </div>
             )}
-            <SolarCard solar={report.solar} deterministic={report.deterministic} className="stagger-1" />
-            <IncentivesPanel incentives={report.incentives} hasIncome={!!income} ownerStatus={ownerStatus} className="stagger-2" />
-            <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-3" />
-            {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-4" />}
-            <FinancingCard
-              netCost={report.deterministic?.net_cost}
-              monthlySavings={report.solar?.price_per_kwh && report.solar_production_kwh
-                ? (report.solar_production_kwh * report.solar.price_per_kwh) / 12
-                : null}
-              className="stagger-5"
-            />
-            <div className="grid sm:grid-cols-2 gap-4">
-              <WindCard wind={report.wind} className="stagger-6" />
-              <GeothermalCard geothermal={report.geothermal} className="stagger-7" />
-            </div>
-            <CarbonCard report={report} className="stagger-8" />
-          </div>
+          </section>
         )}
 
       </main>
