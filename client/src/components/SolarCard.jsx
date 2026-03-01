@@ -26,12 +26,12 @@ function ArcGauge({ payback }) {
           strokeDashoffset={-(circ * 0.125)}
           strokeLinecap="round" transform="rotate(135 48 48)"
           style={{ filter: `drop-shadow(0 0 8px ${color}99)`, transition: 'stroke-dasharray 0.8s ease' }} />
-        <text x={cx} y={cy - 1} textAnchor="middle" fill="white" fontSize="17" fontWeight="800" fontFamily="Inter, sans-serif">
+        <text x={cx} y={cy - 1} textAnchor="middle" fill="white" fontSize="22" fontWeight="800" fontFamily="Inter, sans-serif">
           {payback ?? '—'}
         </text>
-        <text x={cx} y={cy + 13} textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="Inter, sans-serif">yrs</text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fill="#64748b" fontSize="11" fontFamily="Inter, sans-serif">yrs</text>
       </svg>
-      <span className="text-xs font-semibold" style={{ color }}>{label}</span>
+      <span className="text-sm font-semibold" style={{ color }}>{label}</span>
     </div>
   )
 }
@@ -40,9 +40,9 @@ function StatBox({ label, value, sub }) {
   return (
     <div className="flex flex-col items-center gap-1 rounded-xl py-3 px-2"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{label}</span>
-      <span className="text-xl font-bold text-slate-100">{value}</span>
-      {sub && <span className="text-[10px] text-slate-600">{sub}</span>}
+      <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{label}</span>
+      <span className="text-2xl font-bold text-slate-100">{value}</span>
+      {sub && <span className="text-xs text-slate-600">{sub}</span>}
     </div>
   )
 }
@@ -77,8 +77,8 @@ export default function SolarCard({ solar, deterministic, className = '' }) {
               </svg>
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-100 leading-none">Solar</h2>
-              <p className="text-xs text-slate-500 mt-1">8 kW system · 30% federal ITC</p>
+              <h2 className="text-lg font-bold text-slate-100 leading-none">Solar</h2>
+              <p className="text-sm text-slate-500 mt-1">8 kW system · 30% federal ITC</p>
             </div>
           </div>
           <ArcGauge payback={payback} />
@@ -98,9 +98,9 @@ export default function SolarCard({ solar, deterministic, className = '' }) {
               <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
               <path d="M7 14.5s1.5 2 5 2 5-2 5-2M9 9h.01M15 9h.01"/>
             </svg>
-            <span className="text-xs text-slate-400">20-yr carbon offset</span>
+            <span className="text-sm text-slate-400">20-yr carbon offset</span>
           </div>
-          <span className="text-sm font-bold text-emerald-400">
+          <span className="text-base font-bold text-emerald-400">
             {carbon == null ? '—' : `${carbon} t CO₂`}
           </span>
         </div>
@@ -115,8 +115,8 @@ export default function SolarCard({ solar, deterministic, className = '' }) {
         ].map(({ label, val }, i) => (
           <div key={label} className={`flex flex-col items-center py-3 gap-0.5 ${i === 0 ? 'border-r' : ''}`}
             style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">{label}</span>
-            <span className="text-sm font-semibold text-slate-300">{val}</span>
+            <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest">{label}</span>
+            <span className="text-base font-semibold text-slate-300">{val}</span>
           </div>
         ))}
       </div>

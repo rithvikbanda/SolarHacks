@@ -45,12 +45,12 @@ function CreditGauge({ score }) {
           strokeDashoffset={-(circ * 0.125)}
           strokeLinecap="round" transform="rotate(135 48 48)"
           style={{ filter: `drop-shadow(0 0 8px ${tier.color}99)`, transition: 'stroke-dasharray 0.6s ease' }} />
-        <text x={cx} y={cy - 1} textAnchor="middle" fill="white" fontSize="17" fontWeight="800" fontFamily="Inter, sans-serif">
+        <text x={cx} y={cy - 1} textAnchor="middle" fill="white" fontSize="22" fontWeight="800" fontFamily="Inter, sans-serif">
           {score}
         </text>
-        <text x={cx} y={cy + 13} textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="Inter, sans-serif">FICO</text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fill="#64748b" fontSize="11" fontFamily="Inter, sans-serif">FICO</text>
       </svg>
-      <span className="text-xs font-semibold" style={{ color: tier.color }}>{tier.label}</span>
+      <span className="text-sm font-semibold" style={{ color: tier.color }}>{tier.label}</span>
     </div>
   )
 }
@@ -100,8 +100,8 @@ export default function FinancingCard({ netCost, monthlySavings, className = '' 
               </svg>
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-100 leading-none">Financing Estimate</h2>
-              <p className="text-xs text-slate-500 mt-1">Solar loan · {tier.apr[0]}%–{tier.apr[1]}% APR</p>
+              <h2 className="text-lg font-bold text-slate-100 leading-none">Financing Estimate</h2>
+              <p className="text-sm text-slate-500 mt-1">Solar loan · {tier.apr[0]}%–{tier.apr[1]}% APR</p>
             </div>
           </div>
           <CreditGauge score={creditScore} />
@@ -132,8 +132,8 @@ export default function FinancingCard({ netCost, monthlySavings, className = '' 
             }}
           />
           <div className="flex justify-between mt-1">
-            <span className="text-[10px] text-slate-600">300</span>
-            <span className="text-[10px] text-slate-600">850</span>
+            <span className="text-xs text-slate-600">300</span>
+            <span className="text-xs text-slate-600">850</span>
           </div>
         </div>
 
@@ -143,7 +143,7 @@ export default function FinancingCard({ netCost, monthlySavings, className = '' 
             <button
               key={years}
               onClick={() => setSelectedTerm(years)}
-              className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all duration-200"
+              className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
               style={{
                 background: selectedTerm === years ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.03)',
                 border: `1px solid ${selectedTerm === years ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.06)'}`,
@@ -160,7 +160,7 @@ export default function FinancingCard({ netCost, monthlySavings, className = '' 
           style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-1">
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-1">
                 Est. Monthly Payment
               </p>
               <p className="text-3xl font-extrabold text-slate-100">
@@ -168,8 +168,8 @@ export default function FinancingCard({ netCost, monthlySavings, className = '' 
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-slate-500">at {apr.toFixed(2)}% APR</p>
-              <p className="text-xs text-slate-500">{selectedTerm}-year term</p>
+              <p className="text-sm text-slate-500">at {apr.toFixed(2)}% APR</p>
+              <p className="text-sm text-slate-500">{selectedTerm}-year term</p>
             </div>
           </div>
         </div>
@@ -190,10 +190,10 @@ export default function FinancingCard({ netCost, monthlySavings, className = '' 
               )}
             </svg>
             <div className="flex-1">
-              <p className="text-xs font-semibold" style={{ color: cashFlowPositive ? '#10b981' : '#f97316' }}>
+              <p className="text-sm font-semibold" style={{ color: cashFlowPositive ? '#10b981' : '#f97316' }}>
                 {cashFlowPositive ? 'Cash-flow positive from day one' : 'Payment exceeds energy savings'}
               </p>
-              <p className="text-[10px] text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Est. savings: ~{moneyMo(monthlySavings)} vs. payment: ~{moneyMo(selected.payment)}
               </p>
             </div>
@@ -209,8 +209,8 @@ export default function FinancingCard({ netCost, monthlySavings, className = '' 
           ].map(({ label, value }) => (
             <div key={label} className="flex flex-col items-center gap-1 rounded-xl py-3 px-2"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{label}</span>
-              <span className="text-sm font-bold text-slate-100">{value}</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{label}</span>
+              <span className="text-base font-bold text-slate-100">{value}</span>
             </div>
           ))}
         </div>
@@ -227,8 +227,8 @@ export default function FinancingCard({ netCost, monthlySavings, className = '' 
               background: s.years === selectedTerm ? 'rgba(59,130,246,0.08)' : 'transparent',
             }}
             onClick={() => setSelectedTerm(s.years)}>
-            <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">{s.years} yr</span>
-            <span className="text-sm font-semibold text-slate-300">{moneyMo(s.payment)}</span>
+            <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest">{s.years} yr</span>
+            <span className="text-base font-semibold text-slate-300">{moneyMo(s.payment)}</span>
           </div>
         ))}
       </div>

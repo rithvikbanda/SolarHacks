@@ -31,15 +31,15 @@ export default function IncentivesPanel({ incentives: data, hasIncome, ownerStat
             </svg>
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-100 leading-none">Incentives</h2>
+            <h2 className="text-lg font-bold text-slate-100 leading-none">Incentives</h2>
             {total > 0 && (
-              <p className="text-xs text-slate-500 mt-1">{list.length} program{list.length !== 1 ? 's' : ''} available</p>
+              <p className="text-sm text-slate-500 mt-1">{list.length} program{list.length !== 1 ? 's' : ''} available</p>
             )}
           </div>
         </div>
         {total > 0 && (
           <div className="text-right">
-            <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">Total</p>
+            <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest">Total</p>
             <p className="text-2xl font-extrabold text-emerald-400 leading-none">{money(total)}</p>
           </div>
         )}
@@ -80,11 +80,11 @@ export default function IncentivesPanel({ incentives: data, hasIncome, ownerStat
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-1 h-8 rounded-full shrink-0" style={{ background: m.color }} />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-200 leading-snug truncate">{item.name}</p>
-                      <p className="text-[10px] font-semibold mt-0.5" style={{ color: m.color }}>{m.label}</p>
+                      <p className="text-base font-medium text-slate-200 leading-snug truncate">{item.name}</p>
+                      <p className="text-xs font-semibold mt-0.5" style={{ color: m.color }}>{m.label}</p>
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-emerald-400 shrink-0">{item.amount}</span>
+                  <span className="text-base font-bold text-emerald-400 shrink-0">{item.amount}</span>
                 </div>
               )
             })}

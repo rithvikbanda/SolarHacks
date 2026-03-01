@@ -31,10 +31,10 @@ export default function WindCard({ wind, className = '' }) {
                 <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
               </svg>
             </div>
-            <span className="text-sm font-bold text-slate-200">Wind</span>
+            <span className="text-base font-bold text-slate-200">Wind</span>
           </div>
           {feasible != null && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+            <span className="text-xs font-bold px-2 py-1 rounded-full"
               style={{
                 background: feasible ? 'rgba(16,185,129,0.12)' : 'rgba(148,163,184,0.08)',
                 color:      feasible ? '#34d399'               : '#64748b',
@@ -50,7 +50,7 @@ export default function WindCard({ wind, className = '' }) {
           <span className="text-5xl font-extrabold text-slate-100 leading-none tabular-nums">
             {speed == null ? '—' : speed.toFixed(1)}
           </span>
-          <span className="text-sm text-slate-500 mt-1">m/s avg speed</span>
+          <span className="text-base text-slate-500 mt-1">m/s avg speed</span>
         </div>
 
         {/* Speed bar */}
@@ -62,14 +62,14 @@ export default function WindCard({ wind, className = '' }) {
                 background: `linear-gradient(90deg, ${meta.color}66, ${meta.color})`,
               }} />
           </div>
-          <div className="flex justify-between text-[10px] text-slate-600 mt-1">
+          <div className="flex justify-between text-xs text-slate-600 mt-1">
             <span>0</span><span>10 m/s</span>
           </div>
         </div>
 
         {/* Classification centered */}
         <div className="flex justify-center">
-          <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full"
+          <span className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full"
             style={{
               background: `${meta.color}18`,
               color: meta.color,
@@ -82,7 +82,7 @@ export default function WindCard({ wind, className = '' }) {
 
         {/* Note */}
         {note && (
-          <p className="text-[10px] text-slate-500 text-center leading-relaxed mt-3 border-t pt-3"
+          <p className="text-xs text-slate-500 text-center leading-relaxed mt-3 border-t pt-3"
             style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             {note}
           </p>

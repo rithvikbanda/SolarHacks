@@ -31,7 +31,7 @@ export default function GeothermalCard({ geothermal, className = '' }) {
               <path d="M12 22c-4.97 0-9-4.03-9-9 0-3.6 2.12-6.72 5.19-8.22C8.07 6.27 8.5 8 8.5 8c0 1.93 1.57 3.5 3.5 3.5S15.5 9.93 15.5 8c0 0 .43-1.73.31-3.22C18.88 6.28 21 9.4 21 13c0 4.97-4.03 9-9 9z"/>
             </svg>
           </div>
-          <span className="text-sm font-bold text-slate-200">Geothermal</span>
+          <span className="text-base font-bold text-slate-200">Geothermal</span>
         </div>
 
         {/* Score — centered */}
@@ -45,8 +45,8 @@ export default function GeothermalCard({ geothermal, className = '' }) {
                 }} />
             ))}
           </div>
-          <span className="text-lg font-bold mt-1" style={{ color: meta.color }}>{suitability}</span>
-          <span className="text-[10px] text-slate-500 mt-0.5">suitability · {score}/5</span>
+          <span className="text-xl font-bold mt-1" style={{ color: meta.color }}>{suitability}</span>
+          <span className="text-xs text-slate-500 mt-0.5">suitability · {score}/5</span>
         </div>
 
         {/* Stats */}
@@ -57,15 +57,15 @@ export default function GeothermalCard({ geothermal, className = '' }) {
           ].map(({ label, val }) => (
             <div key={label} className="flex flex-col items-center rounded-xl py-2.5 px-2 gap-0.5"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest text-center">{label}</span>
-              <span className="text-sm font-semibold text-slate-200">{val}</span>
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest text-center">{label}</span>
+              <span className="text-base font-semibold text-slate-200">{val}</span>
             </div>
           ))}
         </div>
 
         {/* Note */}
         {note && (
-          <p className="text-[10px] text-slate-500 text-center leading-relaxed mt-3 border-t pt-3"
+          <p className="text-xs text-slate-500 text-center leading-relaxed mt-3 border-t pt-3"
             style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             {note}
           </p>

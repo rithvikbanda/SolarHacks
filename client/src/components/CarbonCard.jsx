@@ -152,10 +152,10 @@ export default function CarbonCard({ report, className = '' }) {
               className="flex flex-col items-center gap-2 rounded-xl py-4 px-3"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               {icon}
-              <span className="text-xl font-bold text-slate-100 tabular-nums">
+              <span className="text-2xl font-bold text-slate-100 tabular-nums">
                 {val.toLocaleString()}
               </span>
-              <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest text-center leading-tight">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest text-center leading-tight">
                 {label}
               </span>
             </div>

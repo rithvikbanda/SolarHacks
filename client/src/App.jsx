@@ -122,7 +122,7 @@ export default function App() {
   return (
     <div className="min-h-screen page-gradient">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]/80 backdrop-blur-md">
+      <header className="border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -133,17 +133,9 @@ export default function App() {
                 </svg>
               </div>
               <div>
-                <span className="text-lg font-bold text-white tracking-tight leading-none block">Home Energy Roadmap</span>
-                <span className="text-sm text-[var(--text-muted)] leading-none mt-1 block">Solar · Wind · Geothermal · Incentives</span>
+                <span className="text-lg font-bold text-white tracking-tight leading-none block">SolarHacks</span>
+                <span className="text-sm text-[var(--text-muted)] leading-none mt-1 block">Solar · Wind · Geothermal · Energy</span>
               </div>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full"
-              style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-              </span>
-              <span className="text-sm font-semibold text-emerald-400 tracking-wide">Energy Data</span>
             </div>
           </div>
         </div>
@@ -248,16 +240,9 @@ export default function App() {
             <CarbonCard report={report} className="stagger-2" />
             <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-3" />
             {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-4" />}
-            <FinancingCard
-              netCost={report.deterministic?.net_cost}
-              monthlySavings={report.solar?.price_per_kwh && report.solar_production_kwh
-                ? (report.solar_production_kwh * report.solar.price_per_kwh) / 12
-                : null}
-              className="stagger-5"
-            />
 
             {/* Incentives */}
-            <section className="rounded-2xl border border-[var(--border-muted)] bg-[var(--bg-card)] shadow-xl shadow-black/10 overflow-hidden stagger-6">
+            <section className="rounded-2xl border border-[var(--border-muted)] bg-[var(--bg-card)] shadow-xl shadow-black/10 overflow-hidden stagger-5">
               <div className="p-5 sm:p-6 space-y-4">
                 <div>
                   <h2 className="text-base font-bold text-slate-100">Incentives</h2>
@@ -348,6 +333,14 @@ export default function App() {
                 </div>
               )}
             </section>
+
+            <FinancingCard
+              netCost={report.deterministic?.net_cost}
+              monthlySavings={report.solar?.price_per_kwh && report.solar_production_kwh
+                ? (report.solar_production_kwh * report.solar.price_per_kwh) / 12
+                : null}
+              className="stagger-6"
+            />
 
             <div className="grid sm:grid-cols-2 gap-4">
               <WindCard wind={report.wind} className="stagger-7" />
