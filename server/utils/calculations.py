@@ -56,6 +56,7 @@ def calculate_savings_over_time(
     rate = price_per_kwh or DEFAULT_UTILITY_RATE
     cumulative_savings = -net_cost
     results = []
+
     for year in range(1, years + 1):
         production = kwh * (1 - panel_degradation) ** year
         if production_multipliers is not None:
@@ -63,11 +64,8 @@ def calculate_savings_over_time(
         effective_rate = rate * (1 + utility_inflation) ** year
         annual_savings = production * effective_rate
         cumulative_savings += annual_savings
-        results.append({
-            'year': year,
-            'annual_savings': annual_savings,
-            'cumulative_savings': cumulative_savings,
-        })
+        results.append({"year": year, "annual_savings": annual_savings, "cumulative_savings": cumulative_savings})
+
     return results
 
 
