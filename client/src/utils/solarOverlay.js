@@ -325,7 +325,7 @@ async function downloadGeoTIFF(url, apiKey, apiBaseUrl, fromArrayBuffer, geokeys
  * Heavy libs (geotiff, proj4) load in parallel with building insights for faster TTI.
  */
 export async function loadSolarOverlay(lat, lng, apiKey, apiBaseUrl = '') {
-  const baseUrl = (typeof apiBaseUrl === 'string' && apiBaseUrl) ? apiBaseUrl : (import.meta.env?.VITE_API_BASE_URL || '');
+  const baseUrl = (typeof apiBaseUrl === 'string') ? apiBaseUrl : '';
 
   const ck = cacheKey(lat, lng);
   if (_cache.overlay.has(ck)) return _cache.overlay.get(ck);
