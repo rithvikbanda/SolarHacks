@@ -1,12 +1,12 @@
 import numpy as np
 
-from server.utils.calculations import (
+from utils.calculations import (
     calculate_gross_cost,
     calculate_net_cost,
     calculate_savings_over_time,
     calculate_carbon_offset,
 )
-from server.utils.constants import DEFAULT_UTILITY_RATE, DEFAULT_ANNUAL_KWH
+from utils.constants import DEFAULT_UTILITY_RATE, DEFAULT_ANNUAL_KWH
 
 DEFAULT_N = 1000
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import solar, geocoding, incentives, geothermal, wind, simulate, report
+from routers import energy, incentives, geothermal, wind, simulate, report
 
 app = FastAPI()
 
@@ -13,8 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(solar.router, prefix="/api", tags=["solar"])
-app.include_router(geocoding.router, prefix="/api", tags=["geocoding"])
+app.include_router(energy.router, prefix="/api", tags=["energy"])
 app.include_router(incentives.router, prefix="/api", tags=["incentives"])
 app.include_router(geothermal.router, prefix="/api", tags=["geothermal"])
 app.include_router(wind.router, prefix="/api", tags=["wind"])

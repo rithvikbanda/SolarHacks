@@ -6,9 +6,6 @@ from fastapi import APIRouter
 
 router = APIRouter()
 load_dotenv()
-EIA_API_KEY = os.getenv("EIA_API_KEY")
-if not EIA_API_KEY:
-    raise ValueError("EIA_API_KEY is not set")
 
 
 @router.get("/EIA_price_and_usage")
@@ -18,9 +15,13 @@ def get_price_and_usage(state_abbrev: str):
     price_per_kwh is in dollars
     avg_kwh_per_household is in kWh/year
     """
+    api_key = os.getenv("EIA_API_KEY")
+    if not api_key:
+        return None, None
+
     url = (
         "https://api.eia.gov/v2/electricity/retail-sales/data"
-        f"?api_key={EIA_API_KEY}"
+        f"?api_key={api_key}"
         "&data[]=price"
         "&data[]=sales"
         "&data[]=customers"
