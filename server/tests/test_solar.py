@@ -7,7 +7,7 @@ from server.main import app
 client = TestClient(app)
 
 
-@patch("server.routers.solar.requests.get")
+@patch("server.routers.energy.requests.get")
 def test_solar_eia_price_and_usage_mock(mock_get):
     mock_get.return_value = MagicMock(
         raise_for_status=MagicMock(),

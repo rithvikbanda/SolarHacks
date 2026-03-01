@@ -37,17 +37,17 @@ def test_numeric_amount():
 
 def test_normalize_incentive():
     _norm = incentives_module._normalize_incentive
-    out = _norm({"name": "ITC", "amount": 1800, "type": "Federal"})
+    out = _norm({"program": "ITC", "amount": {"type": "dollar_amount", "number": 1800}, "authority_type": "federal"})
     assert out["name"] == "ITC"
     assert out["amount"] == "$1,800"
-    assert out["type"] == "Federal"
-    out2 = _norm({"title": "State Rebate", "value": "500", "category": "State"})
+    assert out["type"] == "federal"
+    out2 = _norm({"program": "State Rebate", "amount": {"type": "dollar_amount", "number": 500}, "authority_type": "state"})
     assert out2["name"] == "State Rebate"
     assert out2["amount"] == "$500"
-    assert out2["type"] == "State"
+    assert out2["type"] == "state"
     out3 = _norm({})
     assert out3["name"] == "Incentive"
-    assert out3["type"] == "Federal"
+    assert out3["type"] == "federal"
 
 
 @pytest.fixture
@@ -80,8 +80,8 @@ def test_incentives_success_mock(mock_get, client):
         raise_for_status=MagicMock(),
         json=MagicMock(return_value={
             "incentives": [
-                {"name": "Federal ITC", "amount": 9000, "type": "Federal"},
-                {"title": "State", "value": 1000, "category": "State"},
+                {"program": "Federal ITC", "amount": {"type": "dollar_amount", "number": 9000}, "authority_type": "federal"},
+                {"program": "State Rebate", "amount": {"type": "dollar_amount", "number": 1000}, "authority_type": "state"},
             ]
         }),
     )
@@ -94,7 +94,7 @@ def test_incentives_success_mock(mock_get, client):
     assert data["count"] == 2
     assert data["total_value"] == 10000
     assert any(i["name"] == "Federal ITC" and i["amount"] == "$9,000" for i in data["incentives"])
-    assert any(i["name"] == "State" and i["amount"] == "$1,000" for i in data["incentives"])
+    assert any(i["name"] == "State Rebate" and i["amount"] == "$1,000" for i in data["incentives"])
 
 
 @patch("server.routers.incentives.requests.get")
@@ -132,10 +132,10 @@ def test_incentives_calls_api_with_correct_parameters(mock_get, client):
     # Correct params: snake_case as sent to requests (FastAPI receives camelCase via alias and passes to handler)
     params = call_kwargs["params"]
     assert params["zip"] == "90210"
-    assert params["income"] == 75000
+    assert params["household_income"] == 75000
     assert params["household_size"] == 4
-    assert params["filing_status"] == "married"
-    assert params["owners_or_renters"] == "renter"
+    assert params["tax_filing"] == "married"
+    assert params["owner_status"] == "renter"
 
     # Timeout
     assert call_kwargs["timeout"] == 10
@@ -153,10 +153,10 @@ def test_incentives_uses_default_params_when_omitted(mock_get, client):
 
     params = mock_get.call_args.kwargs["params"]
     assert params["zip"] == "80202"
-    assert params["income"] == 60000
+    assert params["household_income"] == 60000
     assert params["household_size"] == 2
-    assert params["filing_status"] == "single"
-    assert params["owners_or_renters"] == "owner"
+    assert params["tax_filing"] == "single"
+    assert params["owner_status"] == "owner"
 
 
 @patch("server.routers.incentives.requests.get")
@@ -166,7 +166,7 @@ def test_incentives_accepts_rebates_key_from_api(mock_get, client):
         raise_for_status=MagicMock(),
         json=MagicMock(return_value={
             "rebates": [
-                {"name": "Utility Rebate", "amount": 500, "type": "Utility"},
+                {"program": "Utility Rebate", "amount": {"type": "dollar_amount", "number": 500}, "authority_type": "utility"},
             ]
         }),
     )
@@ -177,5 +177,5 @@ def test_incentives_accepts_rebates_key_from_api(mock_get, client):
     assert data["count"] == 1
     assert data["incentives"][0]["name"] == "Utility Rebate"
     assert data["incentives"][0]["amount"] == "$500"
-    assert data["incentives"][0]["type"] == "Utility"
+    assert data["incentives"][0]["type"] == "utility"
     assert data["total_value"] == 500
