@@ -259,6 +259,7 @@ export default function App() {
             <IncentivesPanel incentives={report.incentives} hasIncome={!!income} ownerStatus={ownerStatus} className="stagger-4" />
             <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-5" />
             {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-6" />}
+            <CarbonCard report={report} className="stagger-7" />
           </div>
         )}
 
