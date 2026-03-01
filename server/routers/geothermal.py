@@ -91,8 +91,7 @@ def get_geothermal(lat: float, lon: float):
         "start_date": start_date,
         "end_date": end_date,
         "timezone": "auto",
-        "daily": "temperature_2m_mean",
-        "hourly": "soil_temperature_0_to_7cm,soil_temperature_7_to_28cm",
+        "daily": "temperature_2m_mean,soil_temperature_0_to_7cm_mean,soil_temperature_7_to_28cm_mean",
         "model": "era5_land",
     }
 
@@ -104,7 +103,6 @@ def get_geothermal(lat: float, lon: float):
 
     data = resp.json()
     daily = data.get("daily", {})
-    hourly = data.get("hourly", {})
 
     # Air temperature: HDD, CDD, climate zone (unchanged logic)
     temps = daily.get("temperature_2m_mean", [])
@@ -119,8 +117,8 @@ def get_geothermal(lat: float, lon: float):
     zone, score, savings_low, savings_high, note = _classify(hdd)
 
     # Soil temperature: annual mean and optional seasonal amplitude (stability)
-    soil_0_7 = hourly.get("soil_temperature_0_to_7cm") or []
-    soil_7_28 = hourly.get("soil_temperature_7_to_28cm") or []
+    soil_0_7 = daily.get("soil_temperature_0_to_7cm_mean") or []
+    soil_7_28 = daily.get("soil_temperature_7_to_28cm_mean") or []
     valid_0_7 = [t for t in soil_0_7 if t is not None]
     valid_7_28 = [t for t in soil_7_28 if t is not None]
 
