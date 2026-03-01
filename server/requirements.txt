@@ -8,3 +8,4 @@ seaborn
 matplotlib
 pytest
 pytest-cov
+openai
