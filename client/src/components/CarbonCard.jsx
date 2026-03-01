@@ -65,15 +65,15 @@ function buildYearData(solarKwh, totalOffsetTons, annualUsageKwh) {
   const tonsPerKwh = totalSolarKwh > 0 ? totalOffsetTons / totalSolarKwh : 0
   const baselineTonsPerYear = annualUsageKwh * tonsPerKwh
 
-  let cumOffset = 0
+  let cumSaved = 0
   let cumBaseline = 0
   return Array.from({ length: YEARS }, (_, i) => {
     const year = i + 1
-    cumOffset   += solarKwh * (1 - DEGRADATION) ** year * tonsPerKwh
+    cumSaved    += solarKwh * (1 - DEGRADATION) ** year * tonsPerKwh
     cumBaseline += baselineTonsPerYear
     return {
       year,
-      offset:   +cumOffset.toFixed(2),
+      offset:   +Math.max(0, cumBaseline - cumSaved).toFixed(2),
       baseline: +cumBaseline.toFixed(2),
     }
   })
