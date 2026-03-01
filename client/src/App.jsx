@@ -9,6 +9,7 @@ import IncentivesPanel from './components/IncentivesPanel'
 import SavingsGraph from './components/SavingsGraph'
 import PanelComparisonChart from './components/PanelComparisonChart'
 import CarbonCard from './components/CarbonCard'
+import AISummaryCard from './components/AISummaryCard'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -237,6 +238,7 @@ export default function App() {
               </p>
             )}
             <SolarCard solar={report.solar} deterministic={report.deterministic} className="stagger-1" />
+            <AISummaryCard report={report} state={location?.address?.state} className="stagger-2" />
             <CarbonCard report={report} className="stagger-2" />
             <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-3" />
             {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-4" />}
