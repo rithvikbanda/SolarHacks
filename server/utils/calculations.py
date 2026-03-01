@@ -1,4 +1,4 @@
-from server.utils.constants import (
+from utils.constants import (
     COST_PER_WATT,
     PERMIT_COST,
     FEDERAL_ITC,

@@ -1,19 +1,19 @@
 import asyncio
 from fastapi import APIRouter, Query
 
-from server.routers.solar import get_price_and_usage
-from server.routers.incentives import get_incentives
-from server.routers.wind import get_wind
-from server.routers.geothermal import get_geothermal
-from server.utils.monte_carlo import run_simulation
-from server.utils.calculations import (
+from routers.energy import get_price_and_usage
+from routers.incentives import get_incentives
+from routers.wind import get_wind
+from routers.geothermal import get_geothermal
+from utils.monte_carlo import run_simulation
+from utils.calculations import (
     calculate_gross_cost,
     calculate_net_cost,
     calculate_payback,
     calculate_savings_over_time,
     calculate_carbon_offset,
 )
-from server.utils.charts import plot_savings_fan_chart
+from utils.charts import plot_savings_fan_chart
 
 router = APIRouter()
 

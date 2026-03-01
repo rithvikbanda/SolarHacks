@@ -61,7 +61,7 @@ def _normalize_incentive(item: dict) -> dict:
     return {"name": name, "amount": amount, "type": type_}
 
 
-@router.get("/api/incentives")
+@router.get("/incentives")
 def get_incentives(
     zip: str = Query(..., description="5-digit zip code"),
     income: int | None = Query(None, description="Annual household income in dollars"),

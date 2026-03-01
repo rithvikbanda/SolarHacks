@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from server.utils.monte_carlo import run_simulation
+from utils.monte_carlo import run_simulation
 
 router = APIRouter()
 
