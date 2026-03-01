@@ -123,10 +123,28 @@ export default function App() {
     <div className="min-h-screen page-gradient">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-white tracking-tight">Home Energy Roadmap</span>
-            <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Renewable Energy</span>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg, #10b981, #0ea5e9)' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+              </div>
+              <div>
+                <span className="text-sm font-bold text-white tracking-tight leading-none block">Home Energy Roadmap</span>
+                <span className="text-[10px] text-[var(--text-muted)] leading-none">Solar · Wind · Geothermal · Incentives</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+              style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-[11px] font-semibold text-emerald-400 tracking-wide">Live Data</span>
+            </div>
           </div>
         </div>
       </header>
