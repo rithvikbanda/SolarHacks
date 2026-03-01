@@ -84,6 +84,7 @@ def get_geothermal(lat: float, lon: float):
         "timezone": "auto",
         "daily": "temperature_2m_mean",
         "hourly": "soil_temperature_0_to_7cm,soil_temperature_7_to_28cm",
+        "model": "era5_land",
     }
 
     try:
