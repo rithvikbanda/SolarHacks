@@ -12,9 +12,10 @@ import { loadSolarOverlay } from '../utils/solarOverlay';
  * @param {string} [props.className]
  * @param {boolean} [props.solarOverlay=true]
  * @param {string} [props.apiKey]
- * @param {function} [props.onPanelConfigChange] - Receives hoursPerYear (number) or null.
+ * @param {function} [props.onPanelConfigChange] - Receives { panelCount, yearlyKwh, panelCapacityWatts } or null.
+ * @param {function} [props.onSolarReady] - Called with true when solar data finishes loading (success or failure), false when it starts.
  */
-export default function MapPreview({ lat, lng, address, zoom = 18, className = '', solarOverlay = true, apiKey: apiKeyProp, onPanelConfigChange }) {
+export default function MapPreview({ lat, lng, address, zoom = 18, className = '', solarOverlay = true, apiKey: apiKeyProp, onPanelConfigChange, onSolarReady }) {
   const apiKey = apiKeyProp || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -22,32 +23,25 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
   const panelsRef = useRef([]);
   const solarPanelConfigsRef = useRef([]);
   const panelCapacityWattsRef = useRef(null);
-  const monthlyIntervalRef = useRef(null);
-  const monthlyDataRef = useRef(null);
-  const currentLoadCoordsRef = useRef(null);
-  const isPausedRef = useRef(false);
   const onChangeRef = useRef(onPanelConfigChange);
   onChangeRef.current = onPanelConfigChange;
+  const onSolarReadyRef = useRef(onSolarReady);
+  onSolarReadyRef.current = onSolarReady;
 
   const [mapError, setMapError] = useState(null);
   const [solarStatus, setSolarStatus] = useState(null);
-  const [monthIndex, setMonthIndex] = useState(0);
-  const [hasMonthlyAnimation, setHasMonthlyAnimation] = useState(false);
   const [solarPanelConfigs, setSolarPanelConfigs] = useState([]);
   const [configId, setConfigId] = useState(0);
 
-  // Compute and emit hoursPerYear for a given config index
-  function emitHoursPerYear(idx) {
+  function emitPanelConfig(idx) {
     const configs = solarPanelConfigsRef.current;
     const config = configs?.[idx];
     if (!config) { onChangeRef.current?.(null); return; }
-    const count = config.panelsCount ?? config.panels_count ?? 0;
+    const panelCount = config.panelsCount ?? config.panels_count ?? 0;
     const yearlyKwh = config.yearlyEnergyDcKwh ?? config.yearly_energy_dc_kwh;
-    const wattsPerPanel = panelCapacityWattsRef.current;
-    if (yearlyKwh == null || !wattsPerPanel) { onChangeRef.current?.(null); return; }
-    // Divide total kWh by single-panel kW so hours scale with panel count
-    const panelKw = wattsPerPanel / 1000;
-    onChangeRef.current?.(panelKw > 0 ? yearlyKwh / panelKw : null);
+    if (yearlyKwh == null) { onChangeRef.current?.(null); return; }
+    const panelCapacityWatts = panelCapacityWattsRef.current;
+    onChangeRef.current?.({ panelCount, yearlyKwh, panelCapacityWatts });
   }
 
   useEffect(() => {
@@ -62,12 +56,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
           zoom: Number(zoom) || 18,
           tilt: 0,
           heading: 0,
-          disableDefaultUI: false,
-          zoomControl: true,
-          mapTypeControl: false,
-          scaleControl: true,
-          streetViewControl: false,
-          fullscreenControl: false,
+          disableDefaultUI: true,
           mapTypeId: 'hybrid',
           styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }],
         });
@@ -81,39 +70,20 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
 
         if (solarOverlay && apiKey) {
           setSolarStatus('loading');
-          setHasMonthlyAnimation(false);
           setSolarPanelConfigs([]);
+          onSolarReadyRef.current?.(false);
           const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
-          const coordRef = { lat, lng };
-          loadSolarOverlay(lat, lng, apiKey, apiBaseUrl, {
-            onMonthlyReady(frames) {
-              const current = currentLoadCoordsRef.current;
-              if (!mapRef.current || !current || current.lat !== coordRef.lat || current.lng !== coordRef.lng) return;
-              const cached = monthlyDataRef.current;
-              if (!cached?.latLngBounds || !Array.isArray(frames) || frames.length !== 12) return;
-              monthlyDataRef.current = { frames, latLngBounds: cached.latLngBounds };
-              setHasMonthlyAnimation(true);
-              setMonthIndex(0);
-              if (monthlyIntervalRef.current) clearInterval(monthlyIntervalRef.current);
-              monthlyIntervalRef.current = setInterval(() => {
-                if (isPausedRef.current) return;
-                setMonthIndex((prev) => (prev + 1) % 12);
-              }, 1500);
-            },
-          })
-            .then(async ({ dataUrl, bounds, buildingInsights, monthlyFrames }) => {
+          loadSolarOverlay(lat, lng, apiKey, apiBaseUrl)
+            .then(async ({ dataUrl, bounds, buildingInsights }) => {
               if (!mapRef.current) return;
               const latLngBounds = new google.maps.LatLngBounds(
                 new google.maps.LatLng(bounds.south, bounds.west),
                 new google.maps.LatLng(bounds.north, bounds.east)
               );
-              const frames = Array.isArray(monthlyFrames) && monthlyFrames.length === 12 ? monthlyFrames : null;
-              const overlay = new google.maps.GroundOverlay(frames ? frames[0] : dataUrl, latLngBounds, { opacity: 0.7 });
+              const overlay = new google.maps.GroundOverlay(dataUrl, latLngBounds, { opacity: 0.7 });
               overlay.setMap(mapRef.current);
               solarOverlayRef.current = overlay;
               setSolarStatus('ok');
-              currentLoadCoordsRef.current = { lat, lng };
-              monthlyDataRef.current = { frames: null, latLngBounds };
               mapRef.current.fitBounds(latLngBounds, { top: 12, right: 12, bottom: 12, left: 12 });
               const z = mapRef.current.getZoom();
               if (typeof z === 'number' && z < 21) mapRef.current.setZoom(z + 1);
@@ -173,7 +143,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                     setConfigId(0);
                     const showCount = configs.length ? (configs[0].panelsCount ?? configs[0].panels_count ?? polygons.length) : polygons.length;
                     polygons.forEach((p, i) => p.setMap(i < showCount ? mapRef.current : null));
-                    emitHoursPerYear(0);
+                    emitPanelConfig(0);
                   }
                 } catch (e) {
                   console.warn('Solar panel preview failed:', e?.message || e);
@@ -185,22 +155,12 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                 panelCapacityWattsRef.current = null;
                 onChangeRef.current?.(null);
               }
-
-              if (frames) {
-                setHasMonthlyAnimation(true);
-                setMonthIndex(0);
-                if (monthlyIntervalRef.current) clearInterval(monthlyIntervalRef.current);
-                monthlyIntervalRef.current = setInterval(() => {
-                  if (isPausedRef.current) return;
-                  setMonthIndex((prev) => (prev + 1) % 12);
-                }, 1500);
-              } else {
-                setHasMonthlyAnimation(false);
-              }
+              onSolarReadyRef.current?.(true);
             })
             .catch((err) => {
               setSolarStatus('unavailable');
               console.warn('Solar overlay failed:', err?.message || err);
+              onSolarReadyRef.current?.(true);
             });
         }
       } catch (err) {
@@ -218,12 +178,8 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
     return () => clearInterval(interval);
   }, [lat, lng, zoom, address, solarOverlay, apiKey]);
 
-  // Cleanup on unmount or coord change
   useEffect(() => {
     return () => {
-      currentLoadCoordsRef.current = null;
-      if (monthlyIntervalRef.current) { clearInterval(monthlyIntervalRef.current); monthlyIntervalRef.current = null; }
-      monthlyDataRef.current = null;
       if (panelsRef.current.length) { panelsRef.current.forEach((p) => p.setMap(null)); panelsRef.current = []; }
       solarPanelConfigsRef.current = [];
       panelCapacityWattsRef.current = null;
@@ -231,18 +187,6 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
       mapRef.current = null;
     };
   }, [lat, lng]);
-
-  // Monthly animation frame swap
-  useEffect(() => {
-    if (!hasMonthlyAnimation || !monthlyDataRef.current || !mapRef.current || !solarOverlayRef.current) return;
-    const { frames, latLngBounds } = monthlyDataRef.current;
-    const url = frames?.[monthIndex];
-    if (!url) return;
-    solarOverlayRef.current.setMap(null);
-    const next = new google.maps.GroundOverlay(url, latLngBounds, { opacity: 0.7 });
-    next.setMap(mapRef.current);
-    solarOverlayRef.current = next;
-  }, [monthIndex, hasMonthlyAnimation]);
 
   // Panel config slider: update polygons
   useEffect(() => {
@@ -253,18 +197,8 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
     if (!config) return;
     const count = config.panelsCount ?? config.panels_count ?? polygons.length;
     polygons.forEach((p, i) => p.setMap(i < count ? mapRef.current : null));
-    emitHoursPerYear(configId);
+    emitPanelConfig(configId);
   }, [configId, solarPanelConfigs]);
-
-  // Resume monthly animation after pointer release
-  useEffect(() => {
-    if (!hasMonthlyAnimation) return;
-    const onPointerUp = () => { isPausedRef.current = false; };
-    document.addEventListener('pointerup', onPointerUp);
-    return () => document.removeEventListener('pointerup', onPointerUp);
-  }, [hasMonthlyAnimation]);
-
-  const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   if (lat == null || lng == null) return null;
 
@@ -283,7 +217,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
         <p className="px-4 py-2 text-sm text-amber-400">{mapError}</p>
       )}
 
-      {(solarPanelConfigs.length > 0 || hasMonthlyAnimation) && (
+      {solarPanelConfigs.length > 0 && (
         <div className="px-4 py-3 space-y-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
 
           {solarStatus === 'loading' && (
@@ -296,7 +230,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
             </p>
           )}
 
-          {solarPanelConfigs.length > 0 && (() => {
+          {(() => {
             const max = Math.max(0, solarPanelConfigs.length - 1)
             const pct = max === 0 ? 100 : (configId / max) * 100
             const count = solarPanelConfigs[configId]?.panelsCount ?? solarPanelConfigs[configId]?.panels_count ?? 0
@@ -314,28 +248,6 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                     background: `linear-gradient(to right, #f97316 ${pct}%, rgba(255,255,255,0.1) ${pct}%)`,
                   }}
                   aria-label="Panels count"
-                />
-              </div>
-            )
-          })()}
-
-          {hasMonthlyAnimation && (() => {
-            const pct = (monthIndex / 11) * 100
-            return (
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Month</span>
-                <span className="text-2xl font-extrabold text-orange-400">{MONTH_NAMES[monthIndex]}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={11}
-                  value={monthIndex}
-                  onPointerDown={() => { isPausedRef.current = true; }}
-                  onChange={(e) => setMonthIndex(Number(e.target.value))}
-                  style={{
-                    background: `linear-gradient(to right, #f97316 ${pct}%, rgba(255,255,255,0.1) ${pct}%)`,
-                  }}
-                  aria-label="Select month"
                 />
               </div>
             )

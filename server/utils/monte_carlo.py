@@ -45,6 +45,7 @@ def run_simulation(
     years: int = 20,
     n: int = DEFAULT_N,
     seed: int | None = None,
+    zip_code: str | None = None,
 ) -> dict:
     rng = np.random.default_rng(seed)
     production = solar_production_kwh if solar_production_kwh is not None else DEFAULT_SOLAR_PRODUCTION_KWH
@@ -79,6 +80,7 @@ def run_simulation(
             production, years,
             panel_degradation=float(degradation_samples[i]),
             production_multipliers=prod_mults,
+            zip_code=zip_code,
         )
 
         all_net_costs[i] = net

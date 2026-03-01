@@ -68,10 +68,17 @@ async def generate_report(
     lon: float,
     state_abbrev: str,
     zip_code: str = Query(..., alias="zip"),
-    system_size_kw: float = 8.0,
+    panel_count: int | None = Query(
+        None,
+        description="Number of solar panels selected in the frontend configurator",
+    ),
+    panel_capacity_watts: float | None = Query(
+        None,
+        description="Watts per panel from the Google Solar API",
+    ),
     solar_production_kwh: float | None = Query(
         None,
-        description="Annual kWh the solar system is expected to produce (from frontend PVWatts or similar)",
+        description="Annual kWh the solar system is expected to produce (from frontend configurator)",
     ),
     income: int | None = None,
     household_size: int = 2,
@@ -94,12 +101,17 @@ async def generate_report(
     flat_rebates = calc_data.get("flat_rebates", 0)
     state_itc_entries = calc_data.get("state_itc_entries") or None
 
+    if panel_count and panel_capacity_watts:
+        system_size_kw = panel_count * panel_capacity_watts / 1000
+    else:
+        system_size_kw = 8.0
+
     # Deterministic single-point estimates
     gross = calculate_gross_cost(system_size_kw)
     net = calculate_net_cost(gross, flat_rebates, state_itc_entries=state_itc_entries)
     payback = calculate_payback(net, solar_production_kwh, price_per_kwh)
     savings = calculate_savings_over_time(net, solar_production_kwh, price_per_kwh, years)
-    carbon = calculate_carbon_offset(solar_production_kwh, years)
+    carbon = calculate_carbon_offset(solar_production_kwh, years, zip_code=zip_code)
 
     deterministic = {
         "gross_cost": round(gross, 2),
@@ -119,9 +131,14 @@ async def generate_report(
         state_itc_entries=state_itc_entries,
         years=years,
         n=min(n_simulations, 10000),
+        zip_code=zip_code,
     )
 
     report_data = {
+        "panel_count": panel_count,
+        "panel_capacity_watts": panel_capacity_watts,
+        "system_size_kw": round(system_size_kw, 2),
+        "solar_production_kwh": solar_production_kwh,
         "solar": solar_data,
         "incentives": incentives_data,
         "wind": wind_data,

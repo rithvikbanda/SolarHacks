@@ -26,11 +26,13 @@ function Skeleton() {
 export default function App() {
   const [location, setLocation] = useState(null)
   const [income, setIncome] = useState('')
+  const [panelConfig, setPanelConfig] = useState(null)
+  const [solarReady, setSolarReady] = useState(false)
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  async function fetchReport(loc, incomeVal) {
+  async function fetchReport(loc, incomeVal, panelCfg) {
     if (!loc) return
     setLoading(true)
     setError(null)
@@ -44,6 +46,12 @@ export default function App() {
         n_simulations: 500,
       })
       if (incomeVal) params.set('income', incomeVal)
+      if (panelCfg) {
+        params.set('panel_count', panelCfg.panelCount)
+        params.set('solar_production_kwh', panelCfg.yearlyKwh)
+        if (panelCfg.panelCapacityWatts)
+          params.set('panel_capacity_watts', panelCfg.panelCapacityWatts)
+      }
       const res = await fetch(`${API}/api/report?${params}`)
       if (!res.ok) throw new Error(`Server error ${res.status}`)
       setReport(await res.json())
@@ -56,6 +64,8 @@ export default function App() {
 
   function handleAddressChange(loc) {
     setLocation(loc)
+    setPanelConfig(null)
+    setSolarReady(false)
     setReport(null)
     setError(null)
   }
@@ -111,7 +121,7 @@ export default function App() {
         {/* Map */}
         {location && (
           <section className="overflow-hidden rounded-2xl border border-[var(--border-muted)] shadow-xl shadow-black/10">
-            <MapPreview lat={location.lat} lng={location.lng} address={addressStr} className="w-full" />
+            <MapPreview lat={location.lat} lng={location.lng} address={addressStr} className="w-full" onPanelConfigChange={setPanelConfig} onSolarReady={setSolarReady} />
           </section>
         )}
 
@@ -134,8 +144,8 @@ export default function App() {
                 />
               </div>
               <button
-                onClick={() => fetchReport(location, income ? parseInt(income, 10) : null)}
-                disabled={loading}
+                onClick={() => fetchReport(location, income ? parseInt(income, 10) : null, panelConfig)}
+                disabled={loading || !solarReady}
                 className="btn-primary"
               >
                 {loading ? (
@@ -145,6 +155,14 @@ export default function App() {
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                     </svg>
                     Analyzing…
+                  </span>
+                ) : !solarReady ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Loading solar data…
                   </span>
                 ) : (
                   'Analyze →'

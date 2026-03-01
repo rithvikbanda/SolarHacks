@@ -9,6 +9,22 @@
 
 const MAX_OVERLAY_PX = 256;
 
+const _cache = {
+  overlay: new Map(),
+  building: new Map(),
+  geotiff: new Map(),
+};
+
+function cacheKey(lat, lng) {
+  return `${Number(lat).toFixed(5)},${Number(lng).toFixed(5)}`;
+}
+
+export function clearSolarCache() {
+  _cache.overlay.clear();
+  _cache.building.clear();
+  _cache.geotiff.clear();
+}
+
 /** Haversine distance between two lat/lng points in meters. */
 function distanceMeters(lat1, lng1, lat2, lng2) {
   const R = 6371000;
@@ -23,6 +39,9 @@ function distanceMeters(lat1, lng1, lat2, lng2) {
 
 /** Fetch full Building Insights (findClosest). Returns full API response or null if not found. */
 export async function getBuildingInsights(lat, lng, apiKey, apiBaseUrl) {
+  const key = cacheKey(lat, lng);
+  if (_cache.building.has(key)) return _cache.building.get(key);
+
   const useProxy = typeof apiBaseUrl === 'string' && apiBaseUrl.length > 0;
   const args = {
     'location.latitude': Number(lat).toFixed(5),
@@ -40,6 +59,7 @@ export async function getBuildingInsights(lat, lng, apiKey, apiBaseUrl) {
     if (data?.error?.code === 404 || data?.error?.status === 'NOT_FOUND') return null;
     throw new Error(data?.error?.message || data?.message || 'Building insights failed');
   }
+  _cache.building.set(key, data);
   return data;
 }
 
@@ -244,16 +264,22 @@ export async function fetchDataLayers(lat, lng, apiKey, apiBaseUrl, radiusMeters
  * Fetch GeoTIFF bytes. Proxy or append key.
  */
 async function fetchGeoTiffBytes(url, apiKey, apiBaseUrl) {
+  if (_cache.geotiff.has(url)) return _cache.geotiff.get(url);
+
+  let buf;
   if (apiBaseUrl) {
     const u = `${apiBaseUrl.replace(/\/$/, '')}/api/solar/geotiff?${new URLSearchParams({ url })}`;
     const res = await fetch(u);
     if (!res.ok) throw new Error('GeoTIFF fetch failed');
-    return res.arrayBuffer();
+    buf = await res.arrayBuffer();
+  } else {
+    const u = url.includes('?') ? `${url}&key=${apiKey}` : `${url}?key=${apiKey}`;
+    const res = await fetch(u);
+    if (!res.ok) throw new Error('GeoTIFF fetch failed');
+    buf = await res.arrayBuffer();
   }
-  const u = url.includes('?') ? `${url}&key=${apiKey}` : `${url}?key=${apiKey}`;
-  const res = await fetch(u);
-  if (!res.ok) throw new Error('GeoTIFF fetch failed');
-  return res.arrayBuffer();
+  _cache.geotiff.set(url, buf);
+  return buf;
 }
 
 /**
@@ -295,15 +321,14 @@ async function downloadGeoTIFF(url, apiKey, apiBaseUrl, fromArrayBuffer, geokeys
  * 1) findClosest building → get center + radius that fits only that building.
  * 2) Data layers with that center + radius → only that building in the tile.
  * 3) renderPalette with mask → roof-only image.
- * Returns { dataUrl, bounds, buildingCenter? } for GroundOverlay and map focus.
+ * Returns { dataUrl, bounds, buildingCenter?, buildingInsights? } for GroundOverlay and map focus.
  * Heavy libs (geotiff, proj4) load in parallel with building insights for faster TTI.
- * Monthly flux is loaded in the background; pass onMonthlyReady(frames) to receive it when done.
- *
- * @param {Object} [opts] - Optional. { onMonthlyReady: (frames: string[]) => void }
  */
-export async function loadSolarOverlay(lat, lng, apiKey, apiBaseUrl = '', opts = {}) {
+export async function loadSolarOverlay(lat, lng, apiKey, apiBaseUrl = '') {
   const baseUrl = (typeof apiBaseUrl === 'string' && apiBaseUrl) ? apiBaseUrl : (import.meta.env?.VITE_API_BASE_URL || '');
-  const onMonthlyReady = opts?.onMonthlyReady;
+
+  const ck = cacheKey(lat, lng);
+  if (_cache.overlay.has(ck)) return _cache.overlay.get(ck);
 
   // Load building insights and heavy libs in parallel so we don't wait for one after the other
   const [insights, geotiffModule, geokeysModule, proj4Module] = await Promise.all([
@@ -350,39 +375,13 @@ export async function loadSolarOverlay(lat, lng, apiKey, apiBaseUrl = '', opts =
 
   const { mask: maskR, data: dataR } = maybeDownsample(mask, data, MAX_OVERLAY_PX);
   const canvas = renderPalette(dataR, maskR, ironPalette, 0, 1800);
-  const out = canvas;
 
-  // Return immediately with annual overlay; load monthly in background and notify via callback
-  if (urls.monthlyFluxUrl && onMonthlyReady) {
-    (async () => {
-      try {
-        const monthly = await downloadGeoTIFF(urls.monthlyFluxUrl, apiKey, baseUrl, fromArrayBuffer, geokeysToProj4, proj4);
-        if (monthly.rasters.length >= 12) {
-          const maskDown = downsampleMaskTo(mask, monthly.width, monthly.height);
-          const MONTHLY_MAX = 200;
-          const frames = [];
-          for (let b = 0; b < 12; b++) {
-            const bandData = {
-              width: monthly.width,
-              height: monthly.height,
-              rasters: [monthly.rasters[b]],
-            };
-            const frameCanvas = renderPalette(bandData, maskDown, ironPalette, 0, MONTHLY_MAX);
-            frames.push(scaleToDataUrl(frameCanvas));
-          }
-          onMonthlyReady(frames);
-        }
-      } catch (e) {
-        console.warn('Monthly flux unavailable:', e?.message || e);
-      }
-    })();
-  }
-
-  return {
-    dataUrl: out.toDataURL('image/png'),
+  const result = {
+    dataUrl: canvas.toDataURL('image/png'),
     bounds: maskR.bounds,
     buildingCenter,
     buildingInsights,
-    monthlyFrames: null,
   };
+  _cache.overlay.set(ck, result);
+  return result;
 }
