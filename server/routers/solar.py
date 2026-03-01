@@ -1,5 +1,3 @@
-# gets average kWh per household per year and $/kWh for a given state from EIA API
-
 import requests
 import sys
 import os
@@ -11,6 +9,7 @@ load_dotenv()
 EIA_API_KEY = os.getenv("EIA_API_KEY")
 if not EIA_API_KEY:
     raise ValueError("EIA_API_KEY is not set")
+
 
 @router.get("/EIA_price_and_usage")
 def get_price_and_usage(state_abbrev: str):
