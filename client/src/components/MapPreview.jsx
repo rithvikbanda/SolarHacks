@@ -2,36 +2,53 @@ import React, { useEffect, useRef, useState } from 'react';
 import { loadSolarOverlay } from '../utils/solarOverlay';
 
 /**
- * Map preview centered on the given coordinates.
- * Uses Google Maps JavaScript API (expects script already loaded, e.g. by AddressSearch).
- * Optionally overlays Google Solar API annual flux data when available.
+ * Map preview with Google Solar API overlay.
  *
  * @param {Object} props
- * @param {number} props.lat - Latitude
- * @param {number} props.lng - Longitude
- * @param {string} [props.address] - Optional address string for marker tooltip
- * @param {number} [props.zoom=18] - Zoom level (18 = building-level for address preview)
- * @param {string} [props.className] - Optional class for the wrapper
- * @param {boolean} [props.solarOverlay=true] - Whether to fetch and show solar flux overlay
- * @param {string} [props.apiKey] - Google API key (Maps + Solar); or set VITE_GOOGLE_MAPS_API_KEY
+ * @param {number} props.lat
+ * @param {number} props.lng
+ * @param {string} [props.address]
+ * @param {number} [props.zoom=18]
+ * @param {string} [props.className]
+ * @param {boolean} [props.solarOverlay=true]
+ * @param {string} [props.apiKey]
+ * @param {function} [props.onPanelConfigChange] - Receives hoursPerYear (number) or null.
  */
-export default function MapPreview({ lat, lng, address, zoom = 18, className = '', solarOverlay = true, apiKey: apiKeyProp }) {
+export default function MapPreview({ lat, lng, address, zoom = 18, className = '', solarOverlay = true, apiKey: apiKeyProp, onPanelConfigChange }) {
   const apiKey = apiKeyProp || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const solarOverlayRef = useRef(null);
   const panelsRef = useRef([]);
   const solarPanelConfigsRef = useRef([]);
+  const panelCapacityWattsRef = useRef(null);
   const monthlyIntervalRef = useRef(null);
-  const monthlyDataRef = useRef(null); // { frames, latLngBounds } when monthly animation available
-  const currentLoadCoordsRef = useRef(null); // { lat, lng } of the overlay currently shown
-  const isPausedRef = useRef(false); // true while user is dragging the month slider
+  const monthlyDataRef = useRef(null);
+  const currentLoadCoordsRef = useRef(null);
+  const isPausedRef = useRef(false);
+  const onChangeRef = useRef(onPanelConfigChange);
+  onChangeRef.current = onPanelConfigChange;
+
   const [mapError, setMapError] = useState(null);
-  const [solarStatus, setSolarStatus] = useState(null); // 'loading' | 'ok' | 'unavailable' | null
-  const [monthIndex, setMonthIndex] = useState(0); // 0–11 for Jan–Dec when monthly animation active
+  const [solarStatus, setSolarStatus] = useState(null);
+  const [monthIndex, setMonthIndex] = useState(0);
   const [hasMonthlyAnimation, setHasMonthlyAnimation] = useState(false);
   const [solarPanelConfigs, setSolarPanelConfigs] = useState([]);
   const [configId, setConfigId] = useState(0);
+
+  // Compute and emit hoursPerYear for a given config index
+  function emitHoursPerYear(idx) {
+    const configs = solarPanelConfigsRef.current;
+    const config = configs?.[idx];
+    if (!config) { onChangeRef.current?.(null); return; }
+    const count = config.panelsCount ?? config.panels_count ?? 0;
+    const yearlyKwh = config.yearlyEnergyDcKwh ?? config.yearly_energy_dc_kwh;
+    const wattsPerPanel = panelCapacityWattsRef.current;
+    if (yearlyKwh == null || !wattsPerPanel) { onChangeRef.current?.(null); return; }
+    // Divide total kWh by single-panel kW so hours scale with panel count
+    const panelKw = wattsPerPanel / 1000;
+    onChangeRef.current?.(panelKw > 0 ? yearlyKwh / panelKw : null);
+  }
 
   useEffect(() => {
     if (lat == null || lng == null || !containerRef.current) return;
@@ -52,14 +69,11 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
           streetViewControl: false,
           fullscreenControl: false,
           mapTypeId: 'hybrid',
-          styles: [
-            { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-          ],
+          styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }],
         });
         mapRef.current = map;
         setMapError(null);
         setSolarStatus(null);
-        // Force map to recalc size after layout (fixes invisible map when container was 0-sized at init)
         setTimeout(() => {
           if (mapRef.current) google.maps.event.trigger(mapRef.current, 'resize');
           if (mapRef.current) mapRef.current.setCenter(center);
@@ -87,15 +101,14 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
               }, 1500);
             },
           })
-            .then(async ({ dataUrl, bounds, buildingCenter, buildingInsights, monthlyFrames }) => {
+            .then(async ({ dataUrl, bounds, buildingInsights, monthlyFrames }) => {
               if (!mapRef.current) return;
               const latLngBounds = new google.maps.LatLngBounds(
                 new google.maps.LatLng(bounds.south, bounds.west),
                 new google.maps.LatLng(bounds.north, bounds.east)
               );
               const frames = Array.isArray(monthlyFrames) && monthlyFrames.length === 12 ? monthlyFrames : null;
-              const initialUrl = frames ? frames[0] : dataUrl;
-              const overlay = new google.maps.GroundOverlay(initialUrl, latLngBounds, { opacity: 0.7 });
+              const overlay = new google.maps.GroundOverlay(frames ? frames[0] : dataUrl, latLngBounds, { opacity: 0.7 });
               overlay.setMap(mapRef.current);
               solarOverlayRef.current = overlay;
               setSolarStatus('ok');
@@ -114,6 +127,8 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                   const configs = potential.solarPanelConfigs || potential.solar_panel_configs || [];
                   const panelW = (potential.panelWidthMeters ?? potential.panel_width_meters ?? 1) / 2;
                   const panelH = (potential.panelHeightMeters ?? potential.panel_height_meters ?? 1) / 2;
+                  panelCapacityWattsRef.current = potential.panelCapacityWatts ?? potential.panel_capacity_watts ?? null;
+
                   if (solarPanels.length && roofSegmentStats.length) {
                     const minE = solarPanels[solarPanels.length - 1]?.yearlyEnergyDcKwh ?? solarPanels[solarPanels.length - 1]?.yearly_energy_dc_kwh ?? 0;
                     const maxE = solarPanels[0]?.yearlyEnergyDcKwh ?? solarPanels[0]?.yearly_energy_dc_kwh ?? 1;
@@ -125,31 +140,29 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                       const b = Math.round(0xf6 + t * (0x7e - 0xf6));
                       palette.push('#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join(''));
                     }
-                    const map = mapRef.current;
                     const polygons = solarPanels.map((panel) => {
                       const center = panel.center || {};
-                      const lat = center.latitude ?? center.lat;
-                      const lng = center.longitude ?? center.lng;
-                      const orientation = (panel.orientation === 'PORTRAIT' ? 90 : 0);
+                      const pLat = center.latitude ?? center.lat;
+                      const pLng = center.longitude ?? center.lng;
+                      const orientation = panel.orientation === 'PORTRAIT' ? 90 : 0;
                       const segIdx = panel.segmentIndex ?? panel.segment_index ?? 0;
                       const segment = roofSegmentStats[segIdx] || {};
                       const azimuth = segment.azimuthDegrees ?? segment.azimuth_degrees ?? 0;
                       const energy = panel.yearlyEnergyDcKwh ?? panel.yearly_energy_dc_kwh ?? 0;
                       const t = maxE > minE ? (energy - minE) / (maxE - minE) : 0;
                       const colorIndex = Math.min(255, Math.max(0, Math.round(t * 255)));
-                      const fillColor = palette[colorIndex];
                       const points = [[panelW, panelH], [panelW, -panelH], [-panelW, -panelH], [-panelW, panelH], [panelW, panelH]];
                       const path = points.map(([x, y]) => {
                         const distM = Math.sqrt(x * x + y * y);
                         const heading = (Math.atan2(y, x) * (180 / Math.PI)) + orientation + azimuth;
-                        return spherical.computeOffset({ lat, lng }, distM, heading);
+                        return spherical.computeOffset({ lat: pLat, lng: pLng }, distM, heading);
                       });
                       return new google.maps.Polygon({
                         paths: path,
                         strokeColor: '#B0BEC5',
                         strokeOpacity: 0.9,
                         strokeWeight: 1,
-                        fillColor,
+                        fillColor: palette[colorIndex],
                         fillOpacity: 0.9,
                         map: null,
                       });
@@ -160,6 +173,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                     setConfigId(0);
                     const showCount = configs.length ? (configs[0].panelsCount ?? configs[0].panels_count ?? polygons.length) : polygons.length;
                     polygons.forEach((p, i) => p.setMap(i < showCount ? mapRef.current : null));
+                    emitHoursPerYear(0);
                   }
                 } catch (e) {
                   console.warn('Solar panel preview failed:', e?.message || e);
@@ -168,6 +182,8 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
               if (!buildingInsights?.solarPotential?.solarPanels?.length) {
                 setSolarPanelConfigs([]);
                 solarPanelConfigsRef.current = [];
+                panelCapacityWattsRef.current = null;
+                onChangeRef.current?.(null);
               }
 
               if (frames) {
@@ -192,54 +208,35 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
       }
     }
 
-    if (window.google?.maps) {
-      initMap();
-      return;
-    }
-
-    // Script might still be loading (e.g. from AddressSearch)
+    if (window.google?.maps) { initMap(); return; }
     let attempts = 0;
-    const maxAttempts = 25; // ~5s
     const interval = setInterval(() => {
       attempts += 1;
-      if (window.google?.maps) {
-        clearInterval(interval);
-        initMap();
-      } else if (attempts >= maxAttempts) {
-        clearInterval(interval);
-        setMapError('Map failed to load. Try selecting an address again.');
-      }
+      if (window.google?.maps) { clearInterval(interval); initMap(); }
+      else if (attempts >= 25) { clearInterval(interval); setMapError('Map failed to load. Try selecting an address again.'); }
     }, 200);
     return () => clearInterval(interval);
   }, [lat, lng, zoom, address, solarOverlay, apiKey]);
 
-  // Cleanup map on unmount or when coords change
+  // Cleanup on unmount or coord change
   useEffect(() => {
     return () => {
       currentLoadCoordsRef.current = null;
-      if (monthlyIntervalRef.current) {
-        clearInterval(monthlyIntervalRef.current);
-        monthlyIntervalRef.current = null;
-      }
+      if (monthlyIntervalRef.current) { clearInterval(monthlyIntervalRef.current); monthlyIntervalRef.current = null; }
       monthlyDataRef.current = null;
-      if (panelsRef.current.length) {
-        panelsRef.current.forEach((p) => p.setMap(null));
-        panelsRef.current = [];
-      }
+      if (panelsRef.current.length) { panelsRef.current.forEach((p) => p.setMap(null)); panelsRef.current = []; }
       solarPanelConfigsRef.current = [];
-      if (solarOverlayRef.current) {
-        solarOverlayRef.current.setMap(null);
-        solarOverlayRef.current = null;
-      }
+      panelCapacityWattsRef.current = null;
+      if (solarOverlayRef.current) { solarOverlayRef.current.setMap(null); solarOverlayRef.current = null; }
       mapRef.current = null;
     };
   }, [lat, lng]);
 
-  // When month index changes (slider or animation), update the overlay to that frame
+  // Monthly animation frame swap
   useEffect(() => {
     if (!hasMonthlyAnimation || !monthlyDataRef.current || !mapRef.current || !solarOverlayRef.current) return;
     const { frames, latLngBounds } = monthlyDataRef.current;
-    const url = frames[monthIndex];
+    const url = frames?.[monthIndex];
     if (!url) return;
     solarOverlayRef.current.setMap(null);
     const next = new google.maps.GroundOverlay(url, latLngBounds, { opacity: 0.7 });
@@ -247,7 +244,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
     solarOverlayRef.current = next;
   }, [monthIndex, hasMonthlyAnimation]);
 
-  // When panel config slider changes, show only that many panels (demo behavior)
+  // Panel config slider: update polygons
   useEffect(() => {
     const configs = solarPanelConfigsRef.current;
     const polygons = panelsRef.current;
@@ -256,14 +253,13 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
     if (!config) return;
     const count = config.panelsCount ?? config.panels_count ?? polygons.length;
     polygons.forEach((p, i) => p.setMap(i < count ? mapRef.current : null));
-  }, [configId]);
+    emitHoursPerYear(configId);
+  }, [configId, solarPanelConfigs]);
 
-  // Unpause when user releases pointer (so animation resumes after sliding)
+  // Resume monthly animation after pointer release
   useEffect(() => {
     if (!hasMonthlyAnimation) return;
-    const onPointerUp = () => {
-      isPausedRef.current = false;
-    };
+    const onPointerUp = () => { isPausedRef.current = false; };
     document.addEventListener('pointerup', onPointerUp);
     return () => document.removeEventListener('pointerup', onPointerUp);
   }, [hasMonthlyAnimation]);
@@ -274,28 +270,13 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
 
   return (
     <div className={`overflow-hidden rounded-lg border border-slate-600 bg-slate-800 ${className}`}>
-      <div
-        ref={containerRef}
-        className="w-full bg-slate-700"
-        style={{ height: '280px', minHeight: '280px' }}
-        aria-label="Map preview"
-      />
-      {mapError && (
-        <p className="p-3 text-sm text-amber-400" role="alert">
-          {mapError}
-        </p>
-      )}
-      {solarStatus === 'loading' && (
-        <p className="p-2 text-xs text-slate-400">Loading solar data…</p>
-      )}
-      {solarStatus === 'unavailable' && (
-        <p className="p-2 text-xs text-slate-500">Solar data not available for this location</p>
-      )}
+      <div ref={containerRef} className="w-full bg-slate-700" style={{ height: '280px', minHeight: '280px' }} aria-label="Map preview" />
+      {mapError && <p className="p-3 text-sm text-amber-400" role="alert">{mapError}</p>}
+      {solarStatus === 'loading' && <p className="p-2 text-xs text-slate-400">Loading solar data…</p>}
+      {solarStatus === 'unavailable' && <p className="p-2 text-xs text-slate-500">Solar data not available for this location</p>}
       {solarPanelConfigs.length > 0 && (
         <div className="px-3 pb-3 pt-1">
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
-            Panels count
-          </label>
+          <label className="block text-xs font-medium text-slate-400 mb-1.5">Panels count</label>
           <input
             type="range"
             min={0}
@@ -313,18 +294,13 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
       {hasMonthlyAnimation && (
         <div className="px-3 pb-3 pt-1">
           <input
-            type="range"
-            min={0}
-            max={11}
-            value={monthIndex}
+            type="range" min={0} max={11} value={monthIndex}
             onPointerDown={() => { isPausedRef.current = true; }}
             onChange={(e) => setMonthIndex(Number(e.target.value))}
             className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-600 accent-amber-500"
             aria-label="Select month"
           />
-          <label className="block text-xs font-medium text-slate-400 mt-1.5">
-            Month: {MONTH_NAMES[monthIndex]}
-          </label>
+          <label className="block text-xs font-medium text-slate-400 mt-1.5">Month: {MONTH_NAMES[monthIndex]}</label>
         </div>
       )}
     </div>

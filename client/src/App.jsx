@@ -1,19 +1,25 @@
 import React, { useState } from 'react'
 import AddressSearch from './components/AddressSearch'
 import MapPreview from './components/MapPreview'
+import PanelWattInput from './components/PanelWattInput'
 
 export default function App() {
   const [result, setResult] = useState(null)
   const [searchError, setSearchError] = useState(null)
+  const [hoursPerYear, setHoursPerYear] = useState(null)
+  const [panelWatts, setPanelWatts] = useState(400)
 
   const handleAddressChange = ({ lat, lng, address }) => {
     setSearchError(null)
     setResult({ address, lat, lng })
+    setHoursPerYear(null)
   }
 
   const handleSearchError = (message) => {
     setSearchError(message)
   }
+
+  const realKwhPerYear = hoursPerYear != null ? hoursPerYear * (panelWatts / 1000) : null
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 p-6">
@@ -27,9 +33,7 @@ export default function App() {
         />
 
         {searchError && (
-          <p className="text-sm text-amber-400" role="alert">
-            {searchError}
-          </p>
+          <p className="text-sm text-amber-400" role="alert">{searchError}</p>
         )}
 
         {result && (
@@ -50,7 +54,20 @@ export default function App() {
               lng={result.lng}
               address={result.address ? [result.address.street, result.address.unit, result.address.city, result.address.state, result.address.zip].filter(Boolean).join(', ') : undefined}
               className="w-full"
+              onPanelConfigChange={setHoursPerYear}
             />
+            {hoursPerYear != null && (
+              <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4 space-y-3">
+                <PanelWattInput value={panelWatts} onChange={setPanelWatts} />
+                <div className="font-mono text-sm">
+                  <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Estimated production</p>
+                  <p className="text-slate-200">
+                    ~{Math.round(realKwhPerYear).toLocaleString()} kWh/year
+                    <span className="text-slate-500 ml-2">({hoursPerYear.toFixed(0)} h × {panelWatts}W)</span>
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
