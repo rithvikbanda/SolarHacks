@@ -249,6 +249,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
                   max={max}
                   value={configId}
                   onChange={(e) => setConfigId(Number(e.target.value))}
+                  className="solar-slider w-full max-w-[240px]"
                   style={{
                     background: `linear-gradient(to right, #f97316 ${pct}%, rgba(255,255,255,0.1) ${pct}%)`,
                   }}
