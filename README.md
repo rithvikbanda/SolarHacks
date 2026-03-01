@@ -1,24 +1,24 @@
 # SolarHacks
 
-A web app that estimates a home's renewable energy potential — solar, wind, and geothermal — based on its address. Pulls real data from Google Solar, NREL, EIA, and more to generate cost projections, payback timelines, carbon impact, and available incentives.
+A web app that estimates a home's renewable energy potential based on its address. Pulls real data from Google Solar, NREL, EIA, and more to generate solar cost projections, payback timelines, reduced carbon impact, and available incentives.
 
-Built for [SolarHacks 2025](https://solarhacks1.vercel.app/).
+Built for [Cheesehacks 2026](https://solarhacks1.vercel.app/).
 
 ## What it does
 
 1. User enters a home address (Google Places autocomplete)
 2. Google Solar API loads roof imagery and building insights — the user can adjust panel count with a slider on the map
 3. Clicking **Analyze** kicks off parallel backend calls to estimate solar production, wind feasibility, geothermal suitability, electricity rates, and carbon offset
-4. A Monte Carlo simulation models 20-year savings under randomized inflation, degradation, and production variance
+4. A Monte Carlo simulation models 20-year savings under randomized utility inflation, panel degradation, cost overrun, and production variance
 5. Results page shows:
-   - Solar cost breakdown and payback period
-   - AI-generated summary (GPT-4o)
-   - Carbon offset with EPA equivalencies
-   - 20-year savings fan chart
-   - Panel count comparison
-   - Wind and geothermal feasibility
-   - IRA rebates and state/local incentives (after entering household income)
-   - Financing estimates by credit score and loan term
+  - Solar cost breakdown and payback period
+  - AI-generated summary (GPT-4o)
+  - Carbon offset with EPA equivalencies
+  - 20-year savings fan chart
+  - Panel count comparison
+  - IRA rebates and state/local incentives (after entering household income)
+  - Financing estimates by credit score and loan term
+  - Wind and geothermal feasibility
 
 ## Tech stack
 
@@ -42,15 +42,17 @@ Built for [SolarHacks 2025](https://solarhacks1.vercel.app/).
 
 ## APIs used
 
-| API | What for |
-|-----|----------|
+
+| API                                                                        | What for                                               |
+| -------------------------------------------------------------------------- | ------------------------------------------------------ |
 | [Google Solar API](https://developers.google.com/maps/documentation/solar) | Building insights, roof data layers, GeoTIFF flux maps |
-| [Google Maps / Places](https://developers.google.com/maps) | Address autocomplete, map rendering |
-| [EIA Open Data](https://www.eia.gov/opendata/) | State electricity prices and residential usage |
-| [Rewiring America](https://www.rewiringamerica.org/app/ira-calculator) | IRA rebates, state/local incentives |
-| [NREL Wind Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) | Wind speed at 40m hub height |
-| [Open-Meteo](https://open-meteo.com/) | Historical air + soil temps for geothermal suitability |
-| [OpenAI](https://platform.openai.com/) | GPT-4o for generating a plain-English summary |
+| [Google Maps / Places](https://developers.google.com/maps)                 | Address autocomplete, map rendering                    |
+| [EIA Open Data](https://www.eia.gov/opendata/)                             | State electricity prices and residential usage         |
+| [Rewiring America](https://www.rewiringamerica.org/app/ira-calculator)     | IRA rebates, state/local incentives                    |
+| [NREL Wind Toolkit](https://www.nrel.gov/grid/wind-toolkit.html)           | Wind speed at 40m hub height                           |
+| [Open-Meteo](https://open-meteo.com/)                                      | Historical air + soil temps for geothermal suitability |
+| [OpenAI](https://platform.openai.com/)                                     | GPT-4o for generating a plain-English summary          |
+
 
 ## Running locally
 
