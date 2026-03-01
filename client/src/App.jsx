@@ -126,7 +126,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-white tracking-tight">Home Energy Roadmap</span>
-            <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Solar · Wind · Geothermal</span>
+            <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Renewable Energy</span>
           </div>
         </div>
       </header>
@@ -140,7 +140,7 @@ export default function App() {
             <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">energy potential?</span>
           </h1>
           <p className="mt-3 text-[var(--text-secondary)] text-base leading-relaxed max-w-lg">
-            Get a full solar, wind, and geothermal analysis with real payback projections and incentives for your address.
+            Get a full renewable energy analysis with real payback projections and incentives for your address.
           </p>
         </section>
 
@@ -173,7 +173,7 @@ export default function App() {
         {location && (
           <section className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-[var(--border-muted)] bg-[var(--bg-card)]">
             <p className="text-sm font-medium text-[var(--text-secondary)] text-center">
-              Calculate solar, wind & geothermal potential for this address
+              Calculate renewable energy potential for this address
             </p>
             <button
               onClick={() => fetchReport(location, panelConfig)}
@@ -284,7 +284,9 @@ export default function App() {
                       style={{ colorScheme: 'dark' }}
                     >
                       <option value="single">Single</option>
-                      <option value="married">Married</option>
+                      <option value="joint">Joint</option>
+                      <option value="hoh">Head of household</option>
+                      <option value="married_filing_separately">Married filing separately</option>
                     </select>
                     <p className="text-[10px] text-slate-500 mt-1">Affects income-bracket thresholds</p>
                   </div>

@@ -80,7 +80,7 @@ def get_incentives(
     zip: str = Query(..., description="5-digit zip code"),
     income: int | None = Query(None, description="Annual household income in dollars"),
     household_size: int = Query(default=2, alias="householdSize", description="Number of people in household; affects AMI and state rebate eligibility"),
-    filing_status: str = Query(default="single", alias="filingStatus", description="Tax filing status: single or married; affects income-bracket thresholds"),
+    filing_status: str = Query(default="single", alias="filingStatus", description="Tax filing status: single, joint, hoh, or married_filing_separately"),
     owners_or_renters: str = Query(default="homeowner", alias="ownersOrRenters", description="homeowner or renter; renters cannot claim rooftop solar credits"),
 ):
     if income is None:
@@ -98,6 +98,9 @@ def get_incentives(
     if not api_key:
         raise HTTPException(status_code=500, detail="Rewiring America API key not configured")
 
+    FILING_STATUS_MAP = {"married": "joint"}
+    resolved_filing = FILING_STATUS_MAP.get(filing_status, filing_status)
+
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -106,7 +109,7 @@ def get_incentives(
         "zip": zip,
         "household_income": income,
         "household_size": household_size,
-        "tax_filing": filing_status,
+        "tax_filing": resolved_filing,
         "owner_status": owners_or_renters,
     }
 

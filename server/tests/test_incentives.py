@@ -111,7 +111,7 @@ def test_incentives_calls_api_with_correct_parameters(mock_get, client):
             "zip": "90210",
             "income": 75000,
             "householdSize": 4,
-            "filingStatus": "married",
+            "filingStatus": "joint",
             "ownersOrRenters": "renter",
         },
     )
@@ -134,7 +134,7 @@ def test_incentives_calls_api_with_correct_parameters(mock_get, client):
     assert params["zip"] == "90210"
     assert params["household_income"] == 75000
     assert params["household_size"] == 4
-    assert params["tax_filing"] == "married"
+    assert params["tax_filing"] == "joint"
     assert params["owner_status"] == "renter"
 
     # Timeout
