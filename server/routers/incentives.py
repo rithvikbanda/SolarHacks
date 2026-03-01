@@ -14,8 +14,18 @@ REWIRING_AMERICA_URL = "https://api.rewiringamerica.org/api/v1/calculator"
 
 
 def _format_amount(value) -> str:
-    """Turn API amount into display string (e.g. $1,200)."""
+    """Turn API amount into display string (e.g. $1,200 or 15% up to $1,000)."""
     if value is None:
+        return "—"
+    if isinstance(value, dict):
+        amt_type = value.get("type", "")
+        number = value.get("number")
+        maximum = value.get("maximum")
+        if amt_type == "percent" and number is not None:
+            pct = f"{int(number * 100)}%"
+            return f"{pct} (up to ${int(maximum):,})" if maximum else pct
+        if number is not None:
+            return f"${int(number):,}" if number == int(number) else f"${number:,.2f}"
         return "—"
     if isinstance(value, str):
         try:
@@ -29,8 +39,15 @@ def _format_amount(value) -> str:
 
 
 def _numeric_amount(value) -> float:
-    """Extract numeric value for total_value calculation."""
+    """Extract numeric dollar value for total_value calculation."""
     if value is None:
+        return 0.0
+    if isinstance(value, dict):
+        amt_type = value.get("type", "")
+        if amt_type == "dollar_amount":
+            return float(value.get("number") or 0)
+        if amt_type == "percent" and value.get("maximum"):
+            return float(value["maximum"])
         return 0.0
     if isinstance(value, (int, float)):
         return float(value)
@@ -43,23 +60,11 @@ def _numeric_amount(value) -> float:
 
 
 def _normalize_incentive(item: dict) -> dict:
-    """Map Rewiring America (or similar) fields to frontend shape: name, amount, type."""
-    name = (
-        item.get("name")
-        or item.get("title")
-        or item.get("label")
-        or item.get("program_name")
-        or "Incentive"
-    )
-    raw_amount = item.get("amount") or item.get("value") or item.get("rebate") or item.get("max_value")
+    """Map Rewiring America fields to frontend shape: name, amount, type."""
+    name = item.get("program") or item.get("short_description") or "Incentive"
+    raw_amount = item.get("amount")
     amount = _format_amount(raw_amount)
-    type_ = (
-        item.get("type")
-        or item.get("category")
-        or item.get("incentive_type")
-        or item.get("level")  # e.g. federal, state, utility
-        or "Federal"
-    )
+    type_ = item.get("authority_type") or "federal"
     return {"name": name, "amount": amount, "type": type_}
 
 
