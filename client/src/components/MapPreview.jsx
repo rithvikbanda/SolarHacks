@@ -75,8 +75,7 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
           setSolarStatus('loading');
           setSolarPanelConfigs([]);
           onSolarReadyRef.current?.(false);
-          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
-          loadSolarOverlay(lat, lng, apiKey, apiBaseUrl)
+          loadSolarOverlay(lat, lng, apiKey)
             .then(async ({ dataUrl, bounds, buildingInsights }) => {
               if (!mapRef.current) return;
               const latLngBounds = new google.maps.LatLngBounds(

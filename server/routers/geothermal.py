@@ -14,19 +14,28 @@ SOIL_DEPTH_LABELS = {
     "7_28cm": "Shallow-mid (7–28 cm) — horizontal/slinky loops",
 }
 
-# Classified by annual Heating Degree Days (Celsius base 18.3°C)
+# Classified by annual Heating Degree Days (Celsius base 18.3°C / 65°F).
+# Thresholds aligned with DOE climate zone definitions (HDD°F converted to HDD°C via ×5/9):
+#   Subarctic  ≥ 12,600 HDD°F → 7,000 HDD°C
+#   Very Cold  ≥  9,000 HDD°F → 5,000 HDD°C
+#   Cold       ≥  5,400 HDD°F → 3,000 HDD°C
+#   Mixed      ≥  2,700 HDD°F → 1,500 HDD°C
+#   Warm       ≥    900 HDD°F →   500 HDD°C
+# Score does not penalize cooling-heavy climates — GSHP is effective for cooling too.
 # (min_hdd, zone_name, score_out_of_5, savings_low_pct, savings_high_pct, note)
 ZONE_TABLE = [
-    (4000, "Very Cold", 5, 50, 65,
-     "Exceptional fit. Dominant heating load is ideal for GSHP — will outperform gas in most cases."),
-    (2200, "Cold",      5, 45, 55,
-     "Excellent fit. Long heating season means a ground source heat pump pays back quickly."),
-    (900,  "Mixed",     4, 38, 50,
-     "Good fit. Meaningful heating and cooling loads — a GSHP handles both efficiently year-round."),
-    (300,  "Warm",      3, 30, 40,
-     "Moderate fit. Primarily a cooling climate; a GSHP is more efficient than central AC."),
-    (0,    "Hot",       2, 22, 32,
-     "Lower benefit zone. High soil temps reduce summer efficiency, but savings still beat standard AC."),
+    (7000, "Subarctic", 5, 45, 60,
+     "Extreme heating season; GSHP can be very compelling if electricity isn't very expensive."),
+    (5000, "Very Cold", 5, 45, 60,
+     "Very strong heating load; GSHP avoids low-temp ASHP efficiency drop."),
+    (3000, "Cold",      5, 40, 55,
+     "Long heating season; often a strong fit."),
+    (1500, "Mixed",     4, 30, 50,
+     "Balanced heating/cooling; good fit when replacing AC+furnace."),
+    (500,  "Warm",      4, 25, 45,
+     "Cooling-heavy areas can still benefit; consider loop temps & humidity."),
+    (0,    "Hot",       4, 25, 45,
+     "Cooling-dominated; GSHP can outperform ASHP where summers are harsh."),
 ]
 
 SCORE_LABELS = {5: "Excellent", 4: "Good", 3: "Moderate", 2: "Fair", 1: "Low"}
