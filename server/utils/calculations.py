@@ -10,7 +10,8 @@ from server.utils.constants import (
 
 def calculate_gross_cost(system_size_kw: float):
     """System size * cost per watt + permit"""
-    return system_size_kw * COST_PER_WATT + PERMIT_COST
+    return system_size_kw * 1000 * COST_PER_WATT + PERMIT_COST
+
 
 
 def calculate_net_cost(gross_cost: float):
@@ -35,22 +36,19 @@ def calculate_savings_over_time(net_cost: float, annual_kwh: float, price_per_kw
     rate = price_per_kwh or DEFAULT_UTILITY_RATE
     cumulative_savings = -net_cost
     results = []
+
     for year in range(1, years + 1):
-        production = kwh * (1 - PANEL_DEGRADATION) ** year
-        savings = production * rate
-        effective_rate = rate * (1 + UTILITY_INFLATION) ** year
+        production = kwh * (1 - PANEL_DEGRADATION) ** (year - 1)
+        effective_rate = rate * (1 + UTILITY_INFLATION) ** (year - 1)
         annual_savings = production * effective_rate
         cumulative_savings += annual_savings
-        results.append({
-            'year': year,
-            'annual_savings': annual_savings,
-            'cumulative_savings': cumulative_savings,
-        })
+        results.append({"year": year, "annual_savings": annual_savings, "cumulative_savings": cumulative_savings})
+
     return results
 
 
 def calculate_carbon_offset(annual_kwh: float, years: int = 20):
     """kWh production converted to CO2 tons offset"""
     kwh = annual_kwh or DEFAULT_ANNUAL_KWH
-    total_kwh = sum(kwh * (1 - PANEL_DEGRADATION) ** year for year in range(1, years + 1))
+    total_kwh = sum(kwh * (1 - PANEL_DEGRADATION) ** (year - 1) for year in range(1, years + 1))
     return round(total_kwh * CO2_LBS_PER_KWH / 2000, 2)
