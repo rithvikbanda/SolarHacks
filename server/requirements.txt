@@ -1,7 +1,10 @@
 fastapi
 uvicorn
 httpx
+requests
 python-dotenv
 numpy
 seaborn
 matplotlib
+pytest
+pytest-cov

@@ -34,8 +34,8 @@ def calculate_payback(
     price_per_kwh: float | None = None,
 ) -> float:
     """Net cost divided by first-year savings (simplified estimate)"""
-    kwh = annual_kwh or DEFAULT_ANNUAL_KWH
-    rate = price_per_kwh or DEFAULT_UTILITY_RATE
+    kwh = annual_kwh if annual_kwh is not None else DEFAULT_ANNUAL_KWH
+    rate = price_per_kwh if price_per_kwh is not None else DEFAULT_UTILITY_RATE
     annual_savings = kwh * rate
     if annual_savings == 0:
         return float('inf')
@@ -52,8 +52,8 @@ def calculate_savings_over_time(
     production_multipliers: list[float] | None = None,
 ) -> list[dict]:
     """Year-by-year savings with inflation, degradation, and optional production variability"""
-    kwh = annual_kwh or DEFAULT_ANNUAL_KWH
-    rate = price_per_kwh or DEFAULT_UTILITY_RATE
+    kwh = annual_kwh if annual_kwh is not None else DEFAULT_ANNUAL_KWH
+    rate = price_per_kwh if price_per_kwh is not None else DEFAULT_UTILITY_RATE
     cumulative_savings = -net_cost
     results = []
 
@@ -76,7 +76,7 @@ def calculate_carbon_offset(
     production_multipliers: list[float] | None = None,
 ) -> float:
     """kWh production converted to CO2 tons offset"""
-    kwh = annual_kwh or DEFAULT_ANNUAL_KWH
+    kwh = annual_kwh if annual_kwh is not None else DEFAULT_ANNUAL_KWH
     total_kwh = 0.0
     for year in range(1, years + 1):
         production = kwh * (1 - panel_degradation) ** year
