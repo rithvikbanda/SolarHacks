@@ -1,5 +1,7 @@
 import os
 import re
+import sys
+import json
 import requests
 from fastapi import APIRouter, HTTPException, Query
 from dotenv import load_dotenv
@@ -85,10 +87,10 @@ def get_incentives(
     }
     params = {
         "zip": zip,
-        "income": income,
+        "household_income": income,
         "household_size": household_size,
-        "filing_status": filing_status,
-        "owners_or_renters": owners_or_renters,
+        "tax_filing": filing_status,
+        "owner_status": owners_or_renters,
     }
 
     try:
@@ -132,3 +134,20 @@ def get_incentives(
         raise HTTPException(status_code=503, detail="Could not connect to Rewiring America")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: python -m server.routers.incentives <ZIP> <INCOME> [HOUSEHOLD_SIZE]")
+        sys.exit(1)
+
+    zip_code = sys.argv[1]
+    income = int(sys.argv[2])
+    household_size = int(sys.argv[3]) if len(sys.argv) > 3 else 2
+
+    try:
+        result = get_incentives(zip_code, income, household_size, "single", "homeowner")
+        print(json.dumps(result, indent=2))
+    except HTTPException as e:
+        print(f"Error {e.status_code}: {e.detail}")
+        sys.exit(1)

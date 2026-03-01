@@ -1,4 +1,6 @@
 import os
+import sys
+import json
 import statistics
 import requests
 from fastapi import APIRouter, HTTPException
@@ -9,7 +11,7 @@ router = APIRouter()
 
 NREL_API_KEY = os.getenv("NREL_API_KEY")
 WIND_URL = "https://developer.nrel.gov/api/wind-toolkit/v2/wind/wtk-srw-download"
-HUB_HEIGHT = 30  # meters — standard for residential small wind turbines
+HUB_HEIGHT = 40  # meters — lowest available in NREL Wind Toolkit, closest to residential
 
 # (min_speed, label, feasible, message)
 WIND_CLASSES = [
@@ -113,3 +115,19 @@ def get_wind(lat: float, lon: float):
             "note": note,
         },
     }
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: python -m server.routers.wind <LAT> <LON>")
+        sys.exit(1)
+
+    lat = float(sys.argv[1])
+    lon = float(sys.argv[2])
+
+    try:
+        result = get_wind(lat, lon)
+        print(json.dumps(result, indent=2))
+    except HTTPException as e:
+        print(f"Error {e.status_code}: {e.detail}")
+        sys.exit(1)
