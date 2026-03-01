@@ -4,6 +4,7 @@ import MapPreview from './components/MapPreview'
 import SolarCard from './components/SolarCard'
 import WindCard from './components/WindCard'
 import GeothermalCard from './components/GeothermalCard'
+import FinancingCard from './components/FinancingCard'
 import IncentivesPanel from './components/IncentivesPanel'
 import SavingsGraph from './components/SavingsGraph'
 import PanelComparisonChart from './components/PanelComparisonChart'
@@ -241,13 +242,22 @@ export default function App() {
               </p>
             )}
             <SolarCard solar={report.solar} deterministic={report.deterministic} className="stagger-1" />
+            <IncentivesPanel incentives={report.incentives} hasIncome={!!income} ownerStatus={ownerStatus} className="stagger-2" />
+            <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-3" />
+            {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-4" />}
+            <FinancingCard
+              netCost={report.deterministic?.net_cost}
+              monthlySavings={report.solar?.price_per_kwh && report.solar_production_kwh
+                ? (report.solar_production_kwh * report.solar.price_per_kwh) / 12
+                : null}
+              className="stagger-5"
+            />
             <div className="grid sm:grid-cols-2 gap-4">
-              <WindCard wind={report.wind} className="stagger-2" />
-              <GeothermalCard geothermal={report.geothermal} className="stagger-3" />
+              <WindCard wind={report.wind} className="stagger-6" />
+              <GeothermalCard geothermal={report.geothermal} className="stagger-7" />
             </div>
             <IncentivesPanel incentives={report.incentives} hasIncome={!!income} ownerStatus={ownerStatus} className="stagger-4" />
             <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-5" />
-            <CarbonCard report={report} className="stagger-6" />
             {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-6" />}
           </div>
         )}

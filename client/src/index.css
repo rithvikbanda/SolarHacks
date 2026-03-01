@@ -98,9 +98,45 @@
     transform: translateY(0);
   }
 }
+/* Solar panel slider */
+.solar-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+.solar-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f97316;
+  box-shadow: 0 0 6px rgba(249, 115, 22, 0.5);
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+.solar-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f97316;
+  box-shadow: 0 0 6px rgba(249, 115, 22, 0.5);
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+.solar-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: transparent;
+}
+
 .stagger-1 { animation: fadeUp 0.4s ease-out forwards; }
 .stagger-2 { animation: fadeUp 0.4s ease-out 0.05s forwards; opacity: 0; }
 .stagger-3 { animation: fadeUp 0.4s ease-out 0.1s forwards; opacity: 0; }
 .stagger-4 { animation: fadeUp 0.4s ease-out 0.15s forwards; opacity: 0; }
 .stagger-5 { animation: fadeUp 0.4s ease-out 0.2s forwards; opacity: 0; }
 .stagger-6 { animation: fadeUp 0.4s ease-out 0.25s forwards; opacity: 0; }
+.stagger-7 { animation: fadeUp 0.4s ease-out 0.3s forwards; opacity: 0; }
