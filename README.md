@@ -7,7 +7,7 @@ Built for [Cheesehacks 2026](https://solarhacks1.vercel.app/).
 ## What it does
 
 1. User enters a home address (Google Places autocomplete)
-2. Google Solar API loads roof imagery and building insights — the user can adjust panel count with a slider on the map
+2. Google Solar API loads roof imagery and building insights. The user can adjust panel count with a slider on the map
 3. Clicking **Analyze** kicks off parallel backend calls to estimate solar production, wind feasibility, geothermal suitability, electricity rates, and carbon offset
 4. A Monte Carlo simulation models 20-year savings under randomized utility inflation, panel degradation, cost overrun, and production variance
 5. Results page shows:
@@ -24,7 +24,7 @@ Built for [Cheesehacks 2026](https://solarhacks1.vercel.app/).
 
 **Client** — React 18, Vite 5, Tailwind CSS, Recharts, Google Maps JS API
 
-**Server** — Python / FastAPI / Uvicorn, NumPy, Matplotlib, OpenAI SDK
+**Server** — Python / FastAPI / Uvicorn, NumPy, OpenAI SDK
 
 ## Project structure
 
