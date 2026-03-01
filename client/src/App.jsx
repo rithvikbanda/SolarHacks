@@ -135,7 +135,7 @@ export default function App() {
               </div>
               <div>
                 <span className="text-lg font-bold text-white tracking-tight leading-none block">SolarHacks</span>
-                <span className="text-sm text-[var(--text-muted)] leading-none mt-1 block">Solar · Wind · Geothermal · Energy</span>
+                <span className="text-sm text-[var(--text-muted)] leading-none mt-1 block">Clean Energy</span>
               </div>
             </div>
           </div>
