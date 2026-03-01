@@ -123,22 +123,22 @@ def get_incentives(
         if not isinstance(raw_list, list):
             raw_list = []
 
-        incentives = [_normalize_incentive(i) for i in raw_list if isinstance(i, dict)]
+        SOLAR_ITEMS = {"rooftop_solar_installation", "battery_storage_installation"}
+
+        solar_list = [
+            i for i in raw_list
+            if isinstance(i, dict) and set(i.get("items") or []) & SOLAR_ITEMS
+        ]
+
+        incentives = [_normalize_incentive(i) for i in solar_list]
         total_value = sum(
             _numeric_amount(i.get("amount") or i.get("value") or i.get("rebate") or i.get("max_value"))
-            for i in raw_list if isinstance(i, dict)
+            for i in solar_list
         )
-
-        SOLAR_ITEMS = {"rooftop_solar_installation", "battery_storage_installation"}
 
         flat_rebates = 0.0
         state_itc_entries = []
-        for item in raw_list:
-            if not isinstance(item, dict):
-                continue
-            item_tags = set(item.get("items") or [])
-            if not item_tags & SOLAR_ITEMS:
-                continue
+        for item in solar_list:
             amt = item.get("amount")
             if not isinstance(amt, dict):
                 continue
