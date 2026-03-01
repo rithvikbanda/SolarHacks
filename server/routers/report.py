@@ -76,7 +76,7 @@ async def generate_report(
     income: int | None = None,
     household_size: int = 2,
     filing_status: str = "single",
-    owners_or_renters: str = "owner",
+    owners_or_renters: str = "homeowner",
     years: int = 20,
     n_simulations: int = 1000,
 ):

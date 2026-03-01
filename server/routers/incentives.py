@@ -74,7 +74,7 @@ def get_incentives(
     income: int | None = Query(None, description="Annual household income in dollars"),
     household_size: int = Query(default=2, alias="householdSize", description="Number of people in household"),
     filing_status: str = Query(default="single", alias="filingStatus", description="Tax filing status: single or married"),
-    owners_or_renters: str = Query(default="owner", alias="ownersOrRenters", description="owner or renter"),
+    owners_or_renters: str = Query(default="homeowner", alias="ownersOrRenters", description="homeowner or renter"),
 ):
     if income is None:
         return {
