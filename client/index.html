@@ -6,9 +6,19 @@
     <title>Home Energy Roadmap</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; }
+      input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; width: 100%; }
+      input[type='range']:focus { outline: none; }
+      input[type='range']::-webkit-slider-runnable-track { height: 6px; border-radius: 99px; background: rgba(255,255,255,0.1); }
+      input[type='range']::-moz-range-track { height: 6px; border-radius: 99px; background: rgba(255,255,255,0.1); }
+      input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; margin-top: -8px; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #fb923c, #ea580c); box-shadow: 0 0 0 3px rgba(249,115,22,0.2); }
+      input[type='range']::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; border: none; background: linear-gradient(135deg, #fb923c, #ea580c); box-shadow: 0 0 0 3px rgba(249,115,22,0.2); }
+    </style>
   </head>
-  <body style="background-color: #0f172a; color: #f8fafc; margin: 0; min-height: 100vh;">
+  <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx?v=4"></script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

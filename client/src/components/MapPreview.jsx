@@ -269,39 +269,84 @@ export default function MapPreview({ lat, lng, address, zoom = 18, className = '
   if (lat == null || lng == null) return null;
 
   return (
-    <div className={`overflow-hidden rounded-lg border border-slate-600 bg-slate-800 ${className}`}>
-      <div ref={containerRef} className="w-full bg-slate-700" style={{ height: '280px', minHeight: '280px' }} aria-label="Map preview" />
-      {mapError && <p className="p-3 text-sm text-amber-400" role="alert">{mapError}</p>}
-      {solarStatus === 'loading' && <p className="p-2 text-xs text-slate-400">Loading solar data…</p>}
-      {solarStatus === 'unavailable' && <p className="p-2 text-xs text-slate-500">Solar data not available for this location</p>}
-      {solarPanelConfigs.length > 0 && (
-        <div className="px-3 pb-3 pt-1">
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">Panels count</label>
-          <input
-            type="range"
-            min={0}
-            max={Math.max(0, solarPanelConfigs.length - 1)}
-            value={configId}
-            onChange={(e) => setConfigId(Number(e.target.value))}
-            className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-600 accent-amber-500"
-            aria-label="Panels count"
-          />
-          <p className="text-xs font-medium text-slate-300 mt-1">
-            {(solarPanelConfigs[configId]?.panelsCount ?? solarPanelConfigs[configId]?.panels_count ?? 0)} panels
-          </p>
+    <div className={`overflow-hidden rounded-2xl ${className}`}
+      style={{ border: '1px solid var(--border-muted)', background: 'var(--bg-card)' }}>
+
+      <div
+        ref={containerRef}
+        className="w-full"
+        style={{ height: '280px', minHeight: '280px' }}
+        aria-label="Map preview"
+      />
+
+      {mapError && (
+        <p className="px-4 py-2 text-sm text-amber-400">{mapError}</p>
+      )}
+
+      {(solarPanelConfigs.length > 0 || hasMonthlyAnimation) && (
+        <div className="px-4 py-3 space-y-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+
+          {solarStatus === 'loading' && (
+            <p className="text-xs text-slate-500 flex items-center gap-1.5">
+              <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              Loading solar data…
+            </p>
+          )}
+
+          {solarPanelConfigs.length > 0 && (() => {
+            const max = Math.max(0, solarPanelConfigs.length - 1)
+            const pct = max === 0 ? 100 : (configId / max) * 100
+            const count = solarPanelConfigs[configId]?.panelsCount ?? solarPanelConfigs[configId]?.panels_count ?? 0
+            return (
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Solar Panels</span>
+                <span className="text-2xl font-extrabold text-orange-400">{count} panels</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={max}
+                  value={configId}
+                  onChange={(e) => setConfigId(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #f97316 ${pct}%, rgba(255,255,255,0.1) ${pct}%)`,
+                  }}
+                  aria-label="Panels count"
+                />
+              </div>
+            )
+          })()}
+
+          {hasMonthlyAnimation && (() => {
+            const pct = (monthIndex / 11) * 100
+            return (
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Month</span>
+                <span className="text-2xl font-extrabold text-orange-400">{MONTH_NAMES[monthIndex]}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={11}
+                  value={monthIndex}
+                  onPointerDown={() => { isPausedRef.current = true; }}
+                  onChange={(e) => setMonthIndex(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #f97316 ${pct}%, rgba(255,255,255,0.1) ${pct}%)`,
+                  }}
+                  aria-label="Select month"
+                />
+              </div>
+            )
+          })()}
         </div>
       )}
-      {hasMonthlyAnimation && (
-        <div className="px-3 pb-3 pt-1">
-          <input
-            type="range" min={0} max={11} value={monthIndex}
-            onPointerDown={() => { isPausedRef.current = true; }}
-            onChange={(e) => setMonthIndex(Number(e.target.value))}
-            className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-600 accent-amber-500"
-            aria-label="Select month"
-          />
-          <label className="block text-xs font-medium text-slate-400 mt-1.5">Month: {MONTH_NAMES[monthIndex]}</label>
-        </div>
+
+      {solarStatus === 'unavailable' && (
+        <p className="px-4 py-2 text-xs text-slate-500 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+          Solar data not available for this location
+        </p>
       )}
     </div>
   );

@@ -157,21 +157,21 @@ export default function AddressSearch({ apiKey, onChange, onError, placeholder =
         .address-search-box gmp-place-autocomplete { display: block !important; width: 100% !important; }
         .address-search-box gmp-place-autocomplete input {
           width: 100% !important; padding: 0.75rem 1rem 0.75rem 2.75rem;
-          border: 1px solid rgba(71, 85, 105, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
           font-size: 1rem;
           box-sizing: border-box;
-          font-family: 'Outfit', system-ui, -apple-system, sans-serif;
-          background: rgba(30, 41, 59, 0.6);
+          font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+          background: rgba(255, 255, 255, 0.05);
           color: #f1f5f9;
           transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .address-search-box gmp-place-autocomplete input::placeholder { color: #64748b; }
         .address-search-box gmp-place-autocomplete input:focus {
           outline: none;
-          border-color: rgba(16, 185, 129, 0.6);
+          border-color: rgba(16, 185, 129, 0.5);
           box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
         }
+        .address-search-box gmp-place-autocomplete input::placeholder { color: #64748b; }
       `}</style>
     </div>
   );

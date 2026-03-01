@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+:root {
+  --bg-base: #0c0f14;
+  --bg-elevated: #13171f;
+  --bg-card: rgba(19, 23, 31, 0.92);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-muted: rgba(255, 255, 255, 0.1);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-solar: #10b981;
+  --accent-wind: #3b82f6;
+  --accent-geo: #f97316;
+  --accent-incentives: #a78bfa;
+  --glow-solar: rgba(16, 185, 129, 0.25);
+  --glow-cta: rgba(249, 115, 22, 0.4);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply antialiased;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+  #root {
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .card-base {
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+  .card-accent {
+    height: 3px;
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+  }
+  .input-base {
+    @apply w-full rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-muted);
+    color: var(--text-primary);
+  }
+  .input-base::placeholder {
+    color: var(--text-muted);
+  }
+  .input-base:focus {
+    outline: none;
+    border-color: var(--accent-geo);
+    box-shadow: 0 0 0 3px var(--glow-cta);
+  }
+  .btn-primary {
+    @apply shrink-0 px-5 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-200;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    box-shadow: 0 4px 20px var(--glow-cta);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 28px var(--glow-cta);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+/* Subtle page gradient */
+.page-gradient {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -15%, rgba(16, 185, 129, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 70%, rgba(249, 115, 22, 0.06) 0%, transparent 50%),
+    var(--bg-base);
+}
+
+/* Stagger animation for result cards */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.stagger-1 { animation: fadeUp 0.4s ease-out forwards; }
+.stagger-2 { animation: fadeUp 0.4s ease-out 0.05s forwards; opacity: 0; }
+.stagger-3 { animation: fadeUp 0.4s ease-out 0.1s forwards; opacity: 0; }
+.stagger-4 { animation: fadeUp 0.4s ease-out 0.15s forwards; opacity: 0; }
+.stagger-5 { animation: fadeUp 0.4s ease-out 0.2s forwards; opacity: 0; }
+.stagger-6 { animation: fadeUp 0.4s ease-out 0.25s forwards; opacity: 0; }

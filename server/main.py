@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from routers import energy, incentives, geothermal, wind, simulate, report
+from routers import energy, incentives, geothermal, wind, simulate, report, solar_proxy
 
 app = FastAPI()
 
@@ -27,6 +27,7 @@ app.include_router(geothermal.router, prefix="/api", tags=["geothermal"])
 app.include_router(wind.router, prefix="/api", tags=["wind"])
 app.include_router(simulate.router, prefix="/api", tags=["simulate"])
 app.include_router(report.router, prefix="/api", tags=["report"])
+app.include_router(solar_proxy.router, prefix="/api", tags=["solar"])
 
 
 @app.get("/")
