@@ -48,7 +48,7 @@ def print_report(report: dict) -> None:
     if solar:
         print(f"\n--- Solar (EIA) ---")
         print(f"  Electricity price:    ${solar['price_per_kwh']:.4f}/kWh")
-        print(f"  Avg household usage:  {solar['avg_kwh_per_household']:,.0f} kWh/yr")
+        print(f"  Avg household usage:  {solar['annual_usage_kwh']:,.0f} kWh/yr")
     else:
         print("\n--- Solar (EIA) --- unavailable, using defaults")
 
@@ -109,15 +109,16 @@ if __name__ == "__main__":
     from server.utils.monte_carlo import run_simulation
 
     system_size_kw = 8.0
+    solar_production_kwh = 10000.0
     gross = calculate_gross_cost(system_size_kw)
     net = calculate_net_cost(gross)
-    payback = calculate_payback(net)
-    savings = calculate_savings_over_time(net)
-    carbon = calculate_carbon_offset()
-    simulation = run_simulation(system_size_kw=system_size_kw, seed=42)
+    payback = calculate_payback(net, solar_production_kwh)
+    savings = calculate_savings_over_time(net, solar_production_kwh)
+    carbon = calculate_carbon_offset(solar_production_kwh)
+    simulation = run_simulation(system_size_kw=system_size_kw, solar_production_kwh=solar_production_kwh, seed=42)
 
     sample_report = {
-        "solar": {"price_per_kwh": 0.16, "avg_kwh_per_household": 10500},
+        "solar": {"price_per_kwh": 0.16, "annual_usage_kwh": 10500},
         "incentives": {"incentives": [], "total_value": 0, "count": 0},
         "wind": {
             "avg_wind_speed_ms": 4.2,
@@ -147,7 +148,6 @@ if __name__ == "__main__":
     b64 = plot_savings_fan_chart(sample_report)
     print(f"\nChart base64 length: {len(b64)} chars")
 
-    # Decode and display locally for visual verification
     from PIL import Image
     img = Image.open(io.BytesIO(base64.b64decode(b64)))
     img.show()

@@ -77,7 +77,12 @@ def get_incentives(
     owners_or_renters: str = Query(default="owner", alias="ownersOrRenters", description="owner or renter"),
 ):
     if income is None:
-        return {"incentives": [], "total_value": 0, "count": 0}
+        return {
+            "incentives": [],
+            "total_value": 0,
+            "count": 0,
+            "for_calculations": {"flat_rebates": 0, "state_itc_entries": []},
+        }
 
     if not re.match(r"^\d{5}$", zip):
         raise HTTPException(status_code=400, detail="Invalid zip code format")
@@ -124,11 +129,15 @@ def get_incentives(
             for i in raw_list if isinstance(i, dict)
         )
 
-        # Structured breakdown for calculate_net_cost
+        SOLAR_ITEMS = {"rooftop_solar_installation", "battery_storage_installation"}
+
         flat_rebates = 0.0
         state_itc_entries = []
         for item in raw_list:
             if not isinstance(item, dict):
+                continue
+            item_tags = set(item.get("items") or [])
+            if not item_tags & SOLAR_ITEMS:
                 continue
             amt = item.get("amount")
             if not isinstance(amt, dict):

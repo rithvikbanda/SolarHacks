@@ -75,7 +75,7 @@ def _parse_srw(text: str) -> float:
 def get_wind(lat: float, lon: float):
     """
     Returns wind feasibility for a location using NREL Wind Toolkit data.
-    Hub height is 30m (standard residential turbine).
+    Hub height is 40m — lowest available in NREL, closest to residential scale.
     Feasible if annual average wind speed >= 5 m/s.
     """
     if not NREL_API_KEY:

@@ -21,10 +21,10 @@ router = APIRouter()
 async def _fetch_solar(state_abbrev: str) -> dict | None:
     try:
         result = await asyncio.to_thread(get_price_and_usage, state_abbrev)
-        price, kwh = result
+        price, usage = result
         if price is None:
             return None
-        return {"price_per_kwh": price, "avg_kwh_per_household": kwh}
+        return {"price_per_kwh": price, "annual_usage_kwh": usage}
     except Exception:
         return None
 
@@ -69,6 +69,10 @@ async def generate_report(
     state_abbrev: str,
     zip_code: str = Query(..., alias="zip"),
     system_size_kw: float = 8.0,
+    solar_production_kwh: float | None = Query(
+        None,
+        description="Annual kWh the solar system is expected to produce (from frontend PVWatts or similar)",
+    ),
     income: int | None = None,
     household_size: int = 2,
     filing_status: str = "single",
@@ -84,7 +88,7 @@ async def generate_report(
     )
 
     price_per_kwh = solar_data["price_per_kwh"] if solar_data else None
-    annual_kwh = solar_data["avg_kwh_per_household"] if solar_data else None
+    annual_usage_kwh = solar_data["annual_usage_kwh"] if solar_data else None
 
     calc_data = (incentives_data or {}).get("for_calculations", {})
     flat_rebates = calc_data.get("flat_rebates", 0)
@@ -93,9 +97,9 @@ async def generate_report(
     # Deterministic single-point estimates
     gross = calculate_gross_cost(system_size_kw)
     net = calculate_net_cost(gross, flat_rebates, state_itc_entries=state_itc_entries)
-    payback = calculate_payback(net, annual_kwh, price_per_kwh)
-    savings = calculate_savings_over_time(net, annual_kwh, price_per_kwh, years)
-    carbon = calculate_carbon_offset(annual_kwh, years)
+    payback = calculate_payback(net, solar_production_kwh, price_per_kwh)
+    savings = calculate_savings_over_time(net, solar_production_kwh, price_per_kwh, years)
+    carbon = calculate_carbon_offset(solar_production_kwh, years)
 
     deterministic = {
         "gross_cost": round(gross, 2),
@@ -109,7 +113,7 @@ async def generate_report(
     simulation = await asyncio.to_thread(
         run_simulation,
         system_size_kw=system_size_kw,
-        annual_kwh=annual_kwh,
+        solar_production_kwh=solar_production_kwh,
         price_per_kwh=price_per_kwh,
         flat_rebates=flat_rebates,
         state_itc_entries=state_itc_entries,

@@ -2,7 +2,6 @@
 import os
 import sys
 
-# Allow running this file directly (e.g. Code Runner) from repo root or server/
 _here = os.path.dirname(os.path.abspath(__file__))
 _server = os.path.dirname(_here)
 _root = os.path.dirname(_server)
@@ -22,7 +21,7 @@ from server.utils.constants import (
     PERMIT_COST,
     FEDERAL_ITC,
     DEFAULT_UTILITY_RATE,
-    DEFAULT_ANNUAL_KWH,
+    DEFAULT_SOLAR_PRODUCTION_KWH,
 )
 
 
@@ -63,20 +62,25 @@ def test_calculate_net_cost_custom_federal():
     assert calculate_net_cost(gross, federal_itc=0.26) == pytest.approx(30_000 * 0.74)
 
 
+def test_calculate_net_cost_clamps_negative_cost_basis():
+    gross = 10_000
+    # flat_rebates > gross: cost_basis should clamp to 0, net = 0
+    assert calculate_net_cost(gross, flat_rebates=15_000) == 0
+
+
 def test_calculate_payback():
     net = 21_000
-    # default annual_kwh and rate -> annual_savings = 10500 * 0.16 = 1680 -> payback ~12.5
     payback = calculate_payback(net)
     assert payback > 0 and payback < 20
-    assert calculate_payback(net, annual_kwh=10_000, price_per_kwh=0.18) == pytest.approx(
+    assert calculate_payback(net, solar_production_kwh=10_000, price_per_kwh=0.18) == pytest.approx(
         21_000 / (10_000 * 0.18)
     )
-    assert calculate_payback(1000, annual_kwh=0, price_per_kwh=0.16) == float("inf")
+    assert calculate_payback(1000, solar_production_kwh=0, price_per_kwh=0.16) == float("inf")
 
 
 def test_calculate_savings_over_time():
     net = 20_000
-    result = calculate_savings_over_time(net, years=5)
+    result = calculate_savings_over_time(net, solar_production_kwh=10_000, years=5)
     assert len(result) == 5
     for r in result:
         assert "year" in r and "annual_savings" in r and "cumulative_savings" in r
@@ -85,7 +89,7 @@ def test_calculate_savings_over_time():
 
 
 def test_calculate_carbon_offset():
-    result = calculate_carbon_offset(years=20)
+    result = calculate_carbon_offset(solar_production_kwh=10_000, years=20)
     assert isinstance(result, (int, float)) and result >= 0
-    result_10 = calculate_carbon_offset(annual_kwh=10_000, years=10)
+    result_10 = calculate_carbon_offset(solar_production_kwh=10_000, years=10)
     assert result_10 >= 0

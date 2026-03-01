@@ -34,7 +34,7 @@ def get_price_and_usage(state_abbrev: str):
     )
 
     try:
-        resp = requests.get(url)
+        resp = requests.get(url, timeout=15)
         resp.raise_for_status()
     except requests.RequestException as e:
         print("Error calling EIA API:", e)
@@ -51,13 +51,12 @@ def get_price_and_usage(state_abbrev: str):
     price_cents = float(latest.get("price", 0))
     price_dollars = price_cents / 100.0
 
-    # Average household usage in kWh
-    sales_mwh = float(latest.get("sales", 0))
+    sales_million_kwh = float(latest.get("sales", 0))
     customers = float(latest.get("customers", 0))
     if customers == 0:
         avg_kwh_per_household = None
     else:
-        avg_kwh_per_household = (sales_mwh * 1000000) / customers
+        avg_kwh_per_household = (sales_million_kwh * 1_000_000) / customers
 
     return price_dollars, avg_kwh_per_household
 

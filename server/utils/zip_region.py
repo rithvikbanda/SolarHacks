@@ -2,17 +2,9 @@
 import numpy as np
 from pathlib import Path
 
-regionCO2_emissions_LBS_MWh = {
+REGION_CO2_LBS_PER_MWH = {
     "AKGD": 899.633,
     "AKMS": 520.483,
-    "AZNM": 703.703,
-    "CAMX": 428.464,
-    "ERCT": 733.862,
-    "FRCC": 782.262,
-    "HIMS": 1123.37,
-    "HIOA": 1489.55,
-    "MROE": 1397.31,
-    "MROW": 920.13,
     "AZNM": 703.703,
     "CAMX": 428.464,
     "ERCT": 733.862,
@@ -42,7 +34,6 @@ regionCO2_emissions_LBS_MWh = {
 
 _CSV_PATH = Path(__file__).resolve().parent / "zipToRegion.csv"
 
-# Load CSV: skip header, two string columns (zip, region)
 _zip_region_array = np.loadtxt(
     _CSV_PATH,
     delimiter=",",
@@ -50,25 +41,25 @@ _zip_region_array = np.loadtxt(
     skiprows=1,
 )
 
-# Column 0 = zip (5-char), column 1 = region (e.g. AKMS, CAMX)
 zips = _zip_region_array[:, 0]
 regions = _zip_region_array[:, 1]
 
 
 def get_region(zip_code: str) -> str | None:
-    """Return region for a given zip code, or None if not found."""
+    """Return eGRID region for a given zip code, or None if not found."""
     zip_str = str(zip_code).zfill(5)
     idx = np.where(zips == zip_str)[0]
     if idx.size == 0:
         return None
     return regions[idx[0]]
 
-def get_co2_emissions_lbs_mwh(zip_code: int) -> float:
+
+def get_co2_emissions_lbs_mwh(zip_code: str) -> float | None:
     """Return CO2 emissions in lbs/MWh for a given zip code."""
     region = get_region(zip_code)
     if region is None:
         return None
-    return regionCO2_emissions_LBS_MWh[region]
+    return REGION_CO2_LBS_PER_MWH.get(region)
 
 
 def load_zip_to_region(path: str | Path | None = None) -> np.ndarray:

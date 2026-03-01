@@ -5,7 +5,8 @@ from utils.constants import (
     DEFAULT_UTILITY_RATE,
     UTILITY_INFLATION,
     PANEL_DEGRADATION,
-    DEFAULT_ANNUAL_KWH,
+    DEFAULT_ANNUAL_USAGE_KWH,
+    DEFAULT_SOLAR_PRODUCTION_KWH,
     CO2_LBS_PER_KWH,
 )
 from utils.zip_region import get_co2_emissions_lbs_mwh
@@ -27,11 +28,11 @@ def calculate_net_cost(
     state_itc_entries: list[dict] | None = None,
 ) -> float:
     """Real-life incentive order:
-    1. Subtract flat rebates (state/utility) from gross cost
+    1. Subtract flat rebates (state/utility) from gross cost — clamped to 0
     2. Apply federal ITC to reduced cost basis
     3. Apply state ITCs (pct credits with optional caps) to reduced cost basis
     """
-    cost_basis = gross_cost - flat_rebates
+    cost_basis = max(gross_cost - flat_rebates, 0)
     federal_credit = cost_basis * federal_itc
 
     state_credit = 0.0
@@ -47,13 +48,13 @@ def calculate_net_cost(
 
 def calculate_payback(
     net_cost: float,
-    annual_kwh: float | None = None,
+    solar_production_kwh: float | None = None,
     price_per_kwh: float | None = None,
 ) -> float:
-    """Net cost divided by first-year savings (simplified estimate)"""
-    kwh = annual_kwh if annual_kwh is not None else DEFAULT_ANNUAL_KWH
+    """Net cost divided by first-year savings from solar production"""
+    production = solar_production_kwh if solar_production_kwh is not None else DEFAULT_SOLAR_PRODUCTION_KWH
     rate = price_per_kwh if price_per_kwh is not None else DEFAULT_UTILITY_RATE
-    annual_savings = kwh * rate
+    annual_savings = production * rate
     if annual_savings == 0:
         return float('inf')
     return net_cost / annual_savings
@@ -61,21 +62,21 @@ def calculate_payback(
 
 def calculate_savings_over_time(
     net_cost: float,
-    annual_kwh: float | None = None,
+    solar_production_kwh: float | None = None,
     price_per_kwh: float | None = None,
     years: int = 20,
     panel_degradation: float = PANEL_DEGRADATION,
     utility_inflation: float = UTILITY_INFLATION,
     production_multipliers: list[float] | None = None,
 ) -> list[dict]:
-    """Year-by-year savings with inflation, degradation, and optional production variability"""
-    kwh = annual_kwh if annual_kwh is not None else DEFAULT_ANNUAL_KWH
+    """Year-by-year savings from solar production with inflation, degradation, and optional variability"""
+    base_production = solar_production_kwh if solar_production_kwh is not None else DEFAULT_SOLAR_PRODUCTION_KWH
     rate = price_per_kwh if price_per_kwh is not None else DEFAULT_UTILITY_RATE
     cumulative_savings = -net_cost
     results = []
 
     for year in range(1, years + 1):
-        production = kwh * (1 - panel_degradation) ** year
+        production = base_production * (1 - panel_degradation) ** year
         if production_multipliers is not None:
             production *= production_multipliers[year - 1]
         effective_rate = rate * (1 + utility_inflation) ** year
@@ -87,24 +88,24 @@ def calculate_savings_over_time(
 
 
 def calculate_carbon_offset(
-    annual_kwh: float | None = None,
+    solar_production_kwh: float | None = None,
     years: int = 20,
     panel_degradation: float = PANEL_DEGRADATION,
     production_multipliers: list[float] | None = None,
     zip_code: str | None = None,
 ) -> float:
-    """kWh production converted to CO2 tons offset.
+    """Solar kWh production converted to CO2 tons offset.
     Uses zip-specific grid emissions factor when zip_code is provided,
     otherwise falls back to the national average (CO2_LBS_PER_KWH).
     """
-    kwh = annual_kwh if annual_kwh is not None else DEFAULT_ANNUAL_KWH
+    base_production = solar_production_kwh if solar_production_kwh is not None else DEFAULT_SOLAR_PRODUCTION_KWH
 
     lbs_per_mwh = get_co2_emissions_lbs_mwh(zip_code) if zip_code else None
     co2_lbs_per_kwh = lbs_per_mwh / 1000 if lbs_per_mwh is not None else CO2_LBS_PER_KWH
 
     total_kwh = 0.0
     for year in range(1, years + 1):
-        production = kwh * (1 - panel_degradation) ** year
+        production = base_production * (1 - panel_degradation) ** year
         if production_multipliers is not None:
             production *= production_multipliers[year - 1]
         total_kwh += production

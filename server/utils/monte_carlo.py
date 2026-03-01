@@ -6,7 +6,7 @@ from utils.calculations import (
     calculate_savings_over_time,
     calculate_carbon_offset,
 )
-from utils.constants import DEFAULT_UTILITY_RATE, DEFAULT_ANNUAL_KWH
+from utils.constants import DEFAULT_UTILITY_RATE, DEFAULT_SOLAR_PRODUCTION_KWH
 
 DEFAULT_N = 1000
 
@@ -38,7 +38,7 @@ def _summarize(arr: np.ndarray) -> dict:
 
 def run_simulation(
     system_size_kw: float,
-    annual_kwh: float | None = None,
+    solar_production_kwh: float | None = None,
     price_per_kwh: float | None = None,
     flat_rebates: float = 0,
     state_itc_entries: list[dict] | None = None,
@@ -47,8 +47,8 @@ def run_simulation(
     seed: int | None = None,
 ) -> dict:
     rng = np.random.default_rng(seed)
-    kwh = annual_kwh or DEFAULT_ANNUAL_KWH
-    rate = price_per_kwh or DEFAULT_UTILITY_RATE
+    production = solar_production_kwh if solar_production_kwh is not None else DEFAULT_SOLAR_PRODUCTION_KWH
+    rate = price_per_kwh if price_per_kwh is not None else DEFAULT_UTILITY_RATE
 
     inflation_samples = _sample(rng, DISTRIBUTIONS["utility_inflation"], (n,))
     degradation_samples = _sample(rng, DISTRIBUTIONS["panel_degradation"], (n,))
@@ -69,14 +69,14 @@ def run_simulation(
         prod_mults = prod_mult_samples[i].tolist()
 
         savings = calculate_savings_over_time(
-            net, kwh, rate, years,
+            net, production, rate, years,
             panel_degradation=float(degradation_samples[i]),
             utility_inflation=float(inflation_samples[i]),
             production_multipliers=prod_mults,
         )
 
         carbon = calculate_carbon_offset(
-            kwh, years,
+            production, years,
             panel_degradation=float(degradation_samples[i]),
             production_multipliers=prod_mults,
         )
