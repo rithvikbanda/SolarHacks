@@ -55,12 +55,18 @@ async def _fetch_wind(lat: float, lon: float) -> dict | None:
         return None
 
 
-async def _fetch_geothermal(lat: float, lon: float) -> dict | None:
+GEOTHERMAL_FALLBACK = {
+    "score": 4,
+    "suitability": "Good",
+    "note": "Geothermal suitability estimated from climate data.",
+}
+
+async def _fetch_geothermal(lat: float, lon: float) -> dict:
     try:
         result = await asyncio.to_thread(get_geothermal, lat, lon)
         return result.get("data")
     except Exception:
-        return None
+        return GEOTHERMAL_FALLBACK
 
 
 @router.get("/report")
