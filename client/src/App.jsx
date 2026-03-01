@@ -7,6 +7,7 @@ import GeothermalCard from './components/GeothermalCard'
 import IncentivesPanel from './components/IncentivesPanel'
 import SavingsGraph from './components/SavingsGraph'
 import PanelComparisonChart from './components/PanelComparisonChart'
+import CarbonCard from './components/CarbonCard'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -246,6 +247,7 @@ export default function App() {
             </div>
             <IncentivesPanel incentives={report.incentives} hasIncome={!!income} ownerStatus={ownerStatus} className="stagger-4" />
             <SavingsGraph simulation={report.simulation} deterministic={report.deterministic} className="stagger-5" />
+            <CarbonCard report={report} className="stagger-6" />
             {allConfigs && <PanelComparisonChart allConfigs={allConfigs} report={report} className="stagger-6" />}
           </div>
         )}
